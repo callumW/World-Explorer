@@ -1,4 +1,4 @@
-COPYRIGHT (c) 2016 Callum Wilson
+COPYRIGHT (c) 2016 Callum Wilson callum.w@outlook.com
 
 MIT License
 
