@@ -3,6 +3,7 @@
 + [Description](#description)
 + [Installation](#installation)
 + [License](#license)
++ [Road Map](#road-map)
 
 ###Description
 World Explorer is a 3D Unity game in which the player can fly around
@@ -23,3 +24,6 @@ licensing information.
 
 All files under the MIT license will be marked as such. See
 [License.md](License.md) for more information.
+
+###Road Map
+See [roadmap.md](roadmap.md)
