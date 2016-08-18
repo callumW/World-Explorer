@@ -1,4 +1,4 @@
-﻿// File: Height_map_reader.cs
+﻿// File: HeightMapReader.cs
 // Date: 2016-8-18
 //
 // COPYRIGHT (c) 2016 Callum Wilson callum.w@outlook.com

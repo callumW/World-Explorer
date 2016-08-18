@@ -1,4 +1,4 @@
-﻿// File: Map_generator.cs
+﻿// File: MapGenerator.cs
 // Date: 2016-8-18
 //
 // COPYRIGHT (c) 2016 Callum Wilson callum.w@outlook.com
@@ -54,7 +54,9 @@ public class MapGenerator : MonoBehaviour
 	public int mapChunkSize;
 	public float heightMultiplier;
 
-
+    void Awake() {
+        drawToPlane();
+    }
 
 	/**
 	 * Generate the map from the height map
@@ -77,14 +79,14 @@ public class MapGenerator : MonoBehaviour
 	 * Update the class
 	 */
 	void Update() {
-
+        drawToPlane();
 	}//End of Update
 
 
 	/**
 	 */
 	void Start() {
-
+        drawToPlane();
 	}//End of Start
 
 	/**
