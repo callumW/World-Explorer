@@ -72,7 +72,16 @@ public class MapGenerator : MonoBehaviour
      */
     public void drawToPlane() {
         MapPlane plane = FindObjectOfType<MapPlane>();
-        plane.DrawTexture(TextureGenerator.generateFromHeightMap(GenerateMap()));
+        Texture2D tex = TextureGenerator.generateFromHeightMap(GenerateMap());
+        if (drawMode == DrawMode.heightMap)
+        {
+            plane.DrawTexture(TextureGenerator.generateFromHeightMap(
+                GenerateMap()));
+        }
+        else if (drawMode == DrawMode.mesh)
+        {
+            plane.DrawMesh(MeshGenerator.GenerateMesh())
+        }
     }
 
 	/**
@@ -99,6 +108,7 @@ public class MapGenerator : MonoBehaviour
 		}
 		else if (!File.Exists(heightMapFileName)) {
 			print("File: " + heightMapFileName + " does not exist!");
+			heightMapFileName = Application.dataPath;
 		}
 		else {
 			print("File: " + heightMapFileName + " exists!");
@@ -110,6 +120,6 @@ public class MapGenerator : MonoBehaviour
 		if (heightMultiplier <= 0f) {
 			heightMultiplier = 1f;
 		}
-			
+
 	}//End of OnValidate
 }

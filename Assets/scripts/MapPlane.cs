@@ -30,10 +30,18 @@ using System.Collections;
 
 public class MapPlane : MonoBehaviour {
     public Renderer texRenderer;
+    public MeshFilter meshFilter;
+    public MeshRenderer meshRenderer;
 
     public void DrawTexture(Texture2D tex) {
         texRenderer.sharedMaterial.mainTexture = tex;
-        texRenderer.transform.localScale = new Vector3(tex.width, 1, 
+        texRenderer.transform.localScale = new Vector3(tex.width, 1,
             tex.height);
+    }
+
+    public void DrawMesh(MeshData meshData, Texture2D texture)
+    {
+        meshFilter.sharedMesh = meshData.CreateMesh();
+        meshRenderer.sharedMaterial.mainTexture = texture;
     }
 }
