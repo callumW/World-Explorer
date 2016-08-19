@@ -1,4 +1,4 @@
-#World Explorer v0.1.0
+#World Explorer v0.1.0 (IN DEVELOPMENT)
 ##Contents
 + [Description](#description)
 + [Installation](#installation)
