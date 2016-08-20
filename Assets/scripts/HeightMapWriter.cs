@@ -56,7 +56,7 @@ public static class HeightMapWriter
 
 				int size = width * height;
 				for (int i = 0; i < size; i++) {
-					w.Write(0.7f);
+					w.Write(0f);
 				}
 			}
 		}
