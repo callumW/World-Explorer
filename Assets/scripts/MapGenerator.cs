@@ -30,7 +30,7 @@ using System.IO;
 
 public enum DrawMode
 {
-	heightmap,
+	heightMap,
 	mesh
 };
 
@@ -54,6 +54,8 @@ public class MapGenerator : MonoBehaviour
 	public int mapChunkSize;
 	public float heightMultiplier;
 
+    public DrawMode drawMode;
+
     void Awake() {
         drawToPlane();
     }
@@ -72,7 +74,17 @@ public class MapGenerator : MonoBehaviour
      */
     public void drawToPlane() {
         MapPlane plane = FindObjectOfType<MapPlane>();
+        if (plane == null)
+        {
+            print("Error: Could not locate plane!");
+            return;
+        }
         Texture2D tex = TextureGenerator.generateFromHeightMap(GenerateMap());
+        if (tex == null)
+        {
+            print("Null texture!!");
+            return;
+        }
         if (drawMode == DrawMode.heightMap)
         {
             plane.DrawTexture(TextureGenerator.generateFromHeightMap(
@@ -80,7 +92,9 @@ public class MapGenerator : MonoBehaviour
         }
         else if (drawMode == DrawMode.mesh)
         {
-            plane.DrawMesh(MeshGenerator.GenerateMesh())
+            plane.DrawMesh(MeshGenerator.GenerateMesh(GenerateMap(), 
+                    heightMultiplier, 0), TextureGenerator.generateFromHeightMap(
+                    GenerateMap()));
         }
     }
 
@@ -88,7 +102,7 @@ public class MapGenerator : MonoBehaviour
 	 * Update the class
 	 */
 	void Update() {
-        drawToPlane();
+        //drawToPlane();
 	}//End of Update
 
 

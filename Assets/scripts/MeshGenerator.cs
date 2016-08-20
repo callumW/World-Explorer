@@ -30,33 +30,37 @@ using System;
 public static class MeshGenerator
 {
 
-    public static meshData GenerateMesh(float [,] map.heightMap, float heightMultiplier,
+    public static MeshData GenerateMesh(Map map, float heightMultiplier,
         int levelOfDetail)
     {
         int width = map.heightMap.GetLength(0);
         int height = map.heightMap.GetLength(1);
 
+        float topLeftX = (width - 1) / -2f;
+        float topLeftZ = (width - 1) / -2f;
+
         int meshSimplificationIncrement = 1; //TODO: Change this
 
         int verticesPerLine = (width-1) / meshSimplificationIncrement + 1;
 
-        MeshData meshData = new MeshData (verticiesPerLine, verticiesPerLine);
+        MeshData meshData = new MeshData (verticesPerLine, verticesPerLine);
 		int vertexIndex = 0;
 		for (int y = 0; y < height; y += meshSimplificationIncrement)
         {
 			for (int x = 0; x < width; x += meshSimplificationIncrement)
             {
+                
 				meshData.vertices [vertexIndex] = new Vector3 (topLeftX + x,
-					heightCurve.Evaluate(map.heightMap[x, y]) * heightMultiplier,
+					map.heightMap[x, y] * heightMultiplier,
 					topLeftZ - y);
-
+                
 				meshData.uvs [vertexIndex] = new Vector2 (x / (float)width,
 					y / (float)height);
 					if (x < width - 1 && y < height - 1) {
 					meshData.addTriangle(vertexIndex,
-						vertexIndex+verticiesPerLine+1,
-						vertexIndex+verticiesPerLine);
-					meshData.addTriangle(vertexIndex+verticiesPerLine+1,
+						vertexIndex+verticesPerLine+1,
+						vertexIndex+verticesPerLine);
+					meshData.addTriangle(vertexIndex+verticesPerLine+1,
 						vertexIndex, vertexIndex+1);
 					}
 

@@ -28,29 +28,36 @@ using UnityEngine;
 using System.Collections;
 using UnityEditor;
 
-[CustomEditor (typeof(MapGenerator))]
-public class MapGeneratorEditor : Editor {
+[CustomEditor(typeof(MapGenerator))]
+public class MapGeneratorEditor : Editor
+{
 
-	public override void OnInspectorGUI() {
-		MapGenerator mapGen = (MapGenerator) target;
+    public override void OnInspectorGUI()
+    {
+        MapGenerator mapGen = (MapGenerator)target;
 
-		if (DrawDefaultInspector()) {
+        if (DrawDefaultInspector())
+        {
 			
-		}
+        }
 
-		if (GUILayout.Button("Generate")) {
+        if (GUILayout.Button("Generate"))
+        {
             Debug.Log("Generating map!!");
             mapGen.drawToPlane();
-		}
+        }
 
-		if (GUILayout.Button("Write Flat Map")) {
+        if (GUILayout.Button("Write Flat Map"))
+        {
             if (HeightMapWriter.WriteFlatMap(Application.dataPath + "/map.hm", 
-                255, 255)) {
+                    255, 255))
+            {
                 Debug.Log("Successfully written heightmap");
-			}
-			else {
+            }
+            else
+            {
                 Debug.Log("Could not write heightmap");
-			}
-		}
-	}
+            }
+        }
+    }
 }

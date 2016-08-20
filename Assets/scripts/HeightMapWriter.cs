@@ -33,13 +33,20 @@ public static class HeightMapWriter
 	public static bool WriteFlatMap(string fileName, int width, int height)
 	{
 		Debug.Log("Writting file: " + fileName);
-		if (File.Exists(fileName)) {
-			//oh shit
-			Debug.Log("FileName: " + fileName + " already exists!");
-			return false;
-		}
+        FileMode fileMode;
+        if (File.Exists(fileName))
+        {
+            //oh shit
+            Debug.Log("FileName: " + fileName + " already exists!");
+            Debug.Log("Overwritting file: " + fileName);
+            fileMode = FileMode.Truncate;
+        }
+        else
+        {
+            fileMode = FileMode.CreateNew;
+        }
 
-		using (FileStream fs = new FileStream(fileName, FileMode.CreateNew)) {
+		using (FileStream fs = new FileStream(fileName, fileMode)) {
 			using (BinaryWriter w = new BinaryWriter(fs)) {
 				/* write the width and height */
 				w.Write(width);
@@ -49,7 +56,7 @@ public static class HeightMapWriter
 
 				int size = width * height;
 				for (int i = 0; i < size; i++) {
-					w.Write(1f);
+					w.Write(0.7f);
 				}
 			}
 		}
