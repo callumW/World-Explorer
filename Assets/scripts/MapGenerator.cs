@@ -28,63 +28,58 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 
+using MapCollections;
+
 public enum DrawMode
 {
-	heightMap,
-	mesh
-};
-
-public struct Map
-{
-	public float[,] heightMap;
-	//public Vector3[,] normalMap;
-
-	public Map(float[,] h_map /*, Vector3[,] norm_map*/)
-	{
-		heightMap = h_map;
-		//normalMap = norm_map;
-	}
+    heightMap,
+    mesh
 };
 
 public class MapGenerator : MonoBehaviour
 {
 
-	/* Height Map Vars */
-	public string heightMapFileName;
-	public int mapChunkSize;
-	public float heightMultiplier;
+    /* Height Map Vars */
+    public string heightMapFileName;
+    public int mapChunkSize;
+    public float heightMultiplier;
 
     public DrawMode drawMode;
 
-    void Awake() {
+    void Awake()
+    {
         drawToPlane();
     }
 
-	/**
-	 * Generate the map from the height map
-	 */
-	public Map GenerateMap() {
-		float[,] heightMap = HeightMapReader.ReadHeightMap(heightMapFileName);
-		Map map = new Map(heightMap);
-		return map;
-	}
+    /**
+     * Generate the map from the height map
+     */
+    public Map GenerateMap()
+    {
+        float[,] heightMap = HeightMapReader.ReadHeightMap(heightMapFileName);
+        Map map = new Map(heightMap);
+        return map;
+    }
 
     /**
      * Draw the height to the plane
      */
-    public void drawToPlane() {
+    public void drawToPlane()
+    {
         MapPlane plane = FindObjectOfType<MapPlane>();
         if (plane == null)
         {
             print("Error: Could not locate plane!");
             return;
         }
+
         Texture2D tex = TextureGenerator.generateFromHeightMap(GenerateMap());
         if (tex == null)
         {
             print("Null texture!!");
             return;
         }
+
         if (drawMode == DrawMode.heightMap)
         {
             plane.DrawTexture(TextureGenerator.generateFromHeightMap(
@@ -92,48 +87,57 @@ public class MapGenerator : MonoBehaviour
         }
         else if (drawMode == DrawMode.mesh)
         {
-            plane.DrawMesh(MeshGenerator.GenerateMesh(GenerateMap(), 
-                    heightMultiplier, 0), TextureGenerator.generateFromHeightMap(
-                    GenerateMap()));
+            plane.DrawMesh(MeshGenerator.GenerateMesh(GenerateMap(),
+                heightMultiplier, 0),
+                TextureGenerator.generateFromHeightMap(GenerateMap()));
         }
     }
 
-	/**
-	 * Update the class
-	 */
-	void Update() {
+    /**
+     * Update the class
+     */
+    void Update()
+    {
         //drawToPlane();
-	}//End of Update
+    }//End of Update
 
 
-	/**
-	 */
-	void Start() {
+    /**
+     */
+    void Start()
+    {
         drawToPlane();
-	}//End of Start
+    }//End of Start
 
-	/**
-	 * Validate the class variables
-	 */
-	void OnValidate() {
-		if (heightMapFileName.Equals("")) {
-			print("Error: No height map was specified");
-			heightMapFileName = Application.dataPath;
-		}
-		else if (!File.Exists(heightMapFileName)) {
-			print("File: " + heightMapFileName + " does not exist!");
-			heightMapFileName = Application.dataPath;
-		}
-		else {
-			print("File: " + heightMapFileName + " exists!");
-		}
+    /**
+     * Validate the class variables
+     */
+    void OnValidate()
+    {
+        if (heightMapFileName.Equals(""))
+        {
+            print("Error: No height map was specified");
+            heightMapFileName = Application.dataPath;
+        }
+        else if (!File.Exists(heightMapFileName))
+        {
+            print("File: " + heightMapFileName + " does not exist!");
+            heightMapFileName = Application.dataPath;
+        }
+        else
+        {
+            print("File: " + heightMapFileName + " exists!");
+        }
 
-		if (mapChunkSize <= 0) {
-			mapChunkSize = 255;
-		}
-		if (heightMultiplier <= 0f) {
-			heightMultiplier = 1f;
-		}
+        if (mapChunkSize <= 0)
+        {
+            mapChunkSize = 255;
+        }
 
-	}//End of OnValidate
+        if (heightMultiplier <= 0f)
+        {
+            heightMultiplier = 1f;
+        }
+
+    }//End of OnValidate
 }

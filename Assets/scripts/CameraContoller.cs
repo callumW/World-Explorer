@@ -27,36 +27,42 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraContoller : MonoBehaviour {
+public class CameraContoller : MonoBehaviour
+{
 
 
     public float moveSpeed = 60f;
+    public float accelerateFactor = 3f;
     public float rotateSpeed = 90f;
 
-    private float rotationX;
+    private float rotationX;    //Camera rotation
     private float rotationY;
+
     private bool haveFocus = false;
-    private float lastFocusChange;
-	// Use this for initialization
-	void Start () {
+    private float lastFocusChangeTime;
+
+    // Use this for initialization
+    void Start()
+    {
         rotationX = transform.localRotation.x;
         rotationY = transform.localRotation.y;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         haveFocus = true;
-        lastFocusChange = Time.fixedTime;
-	}
-	
-	// Update is called once per frame
-	void LateUpdate () {
+        lastFocusChangeTime = Time.fixedTime;
+    }
+
+    // Update is called once per frame
+    void LateUpdate()
+    {
         if (haveFocus)
         {
-            rotationX += Input.GetAxis("Mouse X") * Time.deltaTime * 
+            rotationX += Input.GetAxis("Mouse X") * Time.deltaTime *
                 rotateSpeed;
-            rotationY += Input.GetAxis("Mouse Y") * Time.deltaTime * 
+            rotationY += Input.GetAxis("Mouse Y") * Time.deltaTime *
                 rotateSpeed;
 
-            transform.localRotation = Quaternion.AngleAxis(rotationX, 
+            transform.localRotation = Quaternion.AngleAxis(rotationX,
                 Vector3.up);
             transform.localRotation *= Quaternion.AngleAxis(rotationY,
                 Vector3.left);
@@ -64,9 +70,9 @@ public class CameraContoller : MonoBehaviour {
 
         if (Input.GetKey(KeyCode.Escape))
         {
-            if (Time.fixedTime - lastFocusChange > 0.5f)
+            if (Time.fixedTime - lastFocusChangeTime > 0.5f)
             {
-                lastFocusChange = Time.fixedTime;
+                lastFocusChangeTime = Time.fixedTime;
                 if (haveFocus)
                 {
                     Cursor.lockState = CursorLockMode.None;
@@ -83,38 +89,83 @@ public class CameraContoller : MonoBehaviour {
 
         if (haveFocus)
         {
-            if (Input.GetKey(KeyCode.Q))
+            if (Input.GetKey(KeyCode.LeftShift) ||
+                Input.GetKey(KeyCode.RightShift))
             {
-                transform.position += transform.up * moveSpeed * Time.deltaTime;
-            }
-            else if (Input.GetKey(KeyCode.E))
-            {
-                transform.position -= transform.up * moveSpeed * Time.deltaTime;
-            }
+                /** Up and Down **/
+                if (Input.GetKey(KeyCode.Q))
+                {
+                    transform.position += transform.up * moveSpeed *
+                        accelerateFactor * Time.deltaTime;
+                }
+                else if (Input.GetKey(KeyCode.E))
+                {
+                    transform.position -= transform.up * moveSpeed *
+                        accelerateFactor * Time.deltaTime;
+                }
 
-            if (Input.GetKey(KeyCode.W))
-            {
-                transform.position += transform.forward * moveSpeed * 
-                    Time.deltaTime;
-            }
-            else if (Input.GetKey(KeyCode.S))
-            {
-                transform.position -= transform.forward * moveSpeed * 
-                    Time.deltaTime;
-            }
+                /** Forwards and Backwards **/
+                if (Input.GetKey(KeyCode.W))
+                {
+                    transform.position += transform.forward * moveSpeed *
+                        accelerateFactor * Time.deltaTime;
+                }
+                else if (Input.GetKey(KeyCode.S))
+                {
+                    transform.position -= transform.forward * moveSpeed *
+                        accelerateFactor * Time.deltaTime;
+                }
 
-            if (Input.GetKey(KeyCode.A))
-            {
-                transform.position -= transform.right * moveSpeed * 
-                    Time.deltaTime;
+                /** Left and Right **/
+                if (Input.GetKey(KeyCode.A))
+                {
+                    transform.position -= transform.right * moveSpeed *
+                        accelerateFactor * Time.deltaTime;
+                }
+                else if (Input.GetKey(KeyCode.D))
+                {
+                    transform.position += transform.right * moveSpeed *
+                        accelerateFactor * Time.deltaTime;
+                }
             }
-            else if (Input.GetKey(KeyCode.D))
+            else
             {
-                transform.position += transform.right * moveSpeed * 
-                    Time.deltaTime;
+                /** Up and Down **/
+                if (Input.GetKey(KeyCode.Q))
+                {
+                    transform.position += transform.up * moveSpeed *
+                        Time.deltaTime;
+                }
+                else if (Input.GetKey(KeyCode.E))
+                {
+                    transform.position -= transform.up * moveSpeed *
+                        Time.deltaTime;
+                }
+
+                /** Forwards and Backwards **/
+                if (Input.GetKey(KeyCode.W))
+                {
+                    transform.position += transform.forward * moveSpeed *
+                        Time.deltaTime;
+                }
+                else if (Input.GetKey(KeyCode.S))
+                {
+                    transform.position -= transform.forward * moveSpeed *
+                        Time.deltaTime;
+                }
+
+                /** Left and Right **/
+                if (Input.GetKey(KeyCode.A))
+                {
+                    transform.position -= transform.right * moveSpeed *
+                        Time.deltaTime;
+                }
+                else if (Input.GetKey(KeyCode.D))
+                {
+                    transform.position += transform.right * moveSpeed *
+                        Time.deltaTime;
+                }
             }
         }
-	}
-
-
+    }
 }

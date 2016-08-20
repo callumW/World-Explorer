@@ -30,10 +30,11 @@ using UnityEngine;
 
 public static class HeightMapWriter
 {
-	public static bool WriteFlatMap(string fileName, int width, int height)
-	{
-		Debug.Log("Writting file: " + fileName);
+    public static bool WriteFlatMap(string fileName, int width, int height)
+    {
+        Debug.Log("Writting file: " + fileName);
         FileMode fileMode;
+
         if (File.Exists(fileName))
         {
             //oh shit
@@ -46,22 +47,24 @@ public static class HeightMapWriter
             fileMode = FileMode.CreateNew;
         }
 
-		using (FileStream fs = new FileStream(fileName, fileMode)) {
-			using (BinaryWriter w = new BinaryWriter(fs)) {
-				/* write the width and height */
-				w.Write(width);
-				w.Write(height);
-				w.Write(0f);
-				w.Write(1f);
+        using (FileStream fs = new FileStream(fileName, fileMode))
+        {
+            using (BinaryWriter w = new BinaryWriter(fs))
+            {
+                /* write the width and height */
+                w.Write(width);
+                w.Write(height);
+                w.Write(0f);
+                w.Write(1f);
 
-				int size = width * height;
-				for (int i = 0; i < size; i++) {
-					w.Write(0f);
-				}
-			}
-		}
+                int size = width * height;
+                for (int i = 0; i < size; i++)
+                {
+                    w.Write(0f);
+                }
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 }
-

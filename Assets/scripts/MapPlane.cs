@@ -28,12 +28,16 @@
 using UnityEngine;
 using System.Collections;
 
-public class MapPlane : MonoBehaviour {
+using MapCollections;
+
+public class MapPlane : MonoBehaviour
+{
     public Renderer texRenderer;
     public MeshFilter meshFilter;
     public MeshRenderer meshRenderer;
 
-    public void DrawTexture(Texture2D tex) {
+    public void DrawTexture(Texture2D tex)
+    {
         texRenderer.sharedMaterial.mainTexture = tex;
         texRenderer.transform.localScale = new Vector3(tex.width, 1,
             tex.height);
@@ -41,7 +45,7 @@ public class MapPlane : MonoBehaviour {
 
     public void DrawMesh(MeshData meshData, Texture2D texture)
     {
-        meshFilter.sharedMesh = meshData.CreateMesh();
+        meshFilter.sharedMesh = meshData.ToMesh();
         meshRenderer.sharedMaterial.mainTexture = texture;
     }
 }

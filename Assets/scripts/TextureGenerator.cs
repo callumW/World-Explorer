@@ -27,9 +27,13 @@
 using UnityEngine;
 using System.Collections;
 
-public static class TextureGenerator {
+using MapCollections;
 
-    public static Texture2D generateFromHeightMap(Map map) {
+public static class TextureGenerator
+{
+
+    public static Texture2D generateFromHeightMap(Map map)
+    {
         int width = map.heightMap.GetLength(0);
         int height = map.heightMap.GetLength(1);
 
@@ -48,7 +52,8 @@ public static class TextureGenerator {
     }
 
     public static Texture2D generateFromColorMap(Color[] colorMap, int width, 
-        int height) {
+        int height)
+    {
         Texture2D texture = new Texture2D(width, height);
         texture.filterMode = FilterMode.Point;
         texture.wrapMode = TextureWrapMode.Clamp;

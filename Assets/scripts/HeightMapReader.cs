@@ -31,74 +31,82 @@ using System.IO;
 public static class HeightMapReader
 {
 
-	/**
-	 * Read the specified height map file
-	 * \Prerequisite: The filename must not contain invalid characters.
-	 * \return: If successful A 2D array of floats coresponding to the values of the heightmap, if unsuccessful an array
-	 * with -1 as its only element.
-	 */
-	public static float[,] ReadHeightMap(string heightMapFilename) {
-		float[,] error = { {-1} };
+    /**
+     * Read the specified height map file
+     * \Prerequisite: The filename must not contain invalid characters.
+     * \return: If successful A 2D array of floats coresponding to the values of the heightmap, if unsuccessful an array
+     * with -1 as its only element.
+     */
+    public static float[,] ReadHeightMap(string heightMapFilename)
+    {
+        float[,] error = { {-1} };
 
-		if (!File.Exists(heightMapFilename)) {
-			Debug.Log("File: " + heightMapFilename + " does not exist!");
-			return error;
-		}
+        if (!File.Exists(heightMapFilename))
+        {
+            Debug.Log("File: " + heightMapFilename + " does not exist!");
+            return error;
+        }
 
-		float[,] heightMap;
-		int width, height;
-		float min, max;
+        float[,] heightMap;
+        int width, height;
+        float min, max;
 
-		using (FileStream fs = File.OpenRead(heightMapFilename)) {
-			using (BinaryReader br = new BinaryReader(fs)) {
-				/* get the width and height */
-				width = br.ReadInt32();
-				if (width <= 0) {
-					Debug.Log("Failed to read width of heightmap: " + 
-                        heightMapFilename);
-					return error;
-				}
-
-				height = br.ReadInt32();
-
-                if (height <= 0)
+        using (FileStream fs = File.OpenRead(heightMapFilename))
+        {
+            using (BinaryReader br = new BinaryReader(fs))
+            {
+                /* get the width and height */
+                width = br.ReadInt32();
+                if (width <= 0)
                 {
-                    Debug.Log("Failed to read height of heightmap: " + 
+                    Debug.Log("Failed to read width of heightmap: " +
                         heightMapFilename);
                     return error;
                 }
 
-				min = br.ReadSingle();
+                height = br.ReadInt32();
 
-				max = br.ReadSingle();
-				if (min > max) {
-					float tmp = min;
-					min = max;
-					max = tmp;
-				}
-					
-				heightMap = new float[width, height];
-				float currentVal;
+                if (height <= 0)
+                {
+                    Debug.Log("Failed to read height of heightmap: " +
+                        heightMapFilename);
+                    return error;
+                }
 
-				for (int y = 0; y < height; y++) {
-					for (int x = 0; x < width; x++) {
-						currentVal = br.ReadSingle();
+                min = br.ReadSingle();
 
-						if (currentVal > max || currentVal < min) {
-							Debug.Log("Value: " + currentVal + " out of bounds at: " + x + "," + y);
-							currentVal = (currentVal > max) ? max : min;	//truncate value
-							//TODO note: Should we increase bounds instead?
-						}
-						else {
-							heightMap[x,y] = currentVal;
-						}
-					}
-				}
+                max = br.ReadSingle();
+                if (min > max)
+                {
+                    float tmp = min;
+                    min = max;
+                    max = tmp;
+                }
 
-				return heightMap;
-			}
-		}
-	}
+                heightMap = new float[width, height];
+                float currentVal;
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        currentVal = br.ReadSingle();
+
+                        if (currentVal > max || currentVal < min)
+                        {
+                            Debug.Log("Value: " + currentVal + " out of bounds at: " + x + "," + y);
+                            currentVal = (currentVal > max) ? max : min;	//truncate value
+                            //TODO note: Should we increase bounds instead?
+                        }
+                        else
+                        {
+                            heightMap[x,y] = currentVal;
+                        }
+                    }
+                }
+
+                return heightMap;
+            }
+        }
+    }
 }
-
-
