@@ -32,7 +32,7 @@ using MapCollections;
 public static class MeshGenerator
 {
 
-    public static MeshData GenerateMesh(Map map, float heightMultiplier,
+    public static MeshData GenerateMesh(MapData map, float heightMultiplier,
         int levelOfDetail)
     {
         int width = map.heightMap.GetLength(0);
@@ -41,7 +41,8 @@ public static class MeshGenerator
         float topLeftX = (width - 1) / -2f;
         float topLeftZ = (width - 1) / -2f;
 
-        int meshSimplificationIncrement = 1; //TODO: Change this
+        int meshSimplificationIncrement = (levelOfDetail == 0) ? 
+            1 : levelOfDetail * 2;
 
         int verticesPerLine = (width-1) / meshSimplificationIncrement + 1;
 

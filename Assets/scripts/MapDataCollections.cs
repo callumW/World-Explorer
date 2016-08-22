@@ -32,15 +32,15 @@ namespace MapCollections
     /**
      * Contain Map info required to make a terrain.
      */
-    public struct Map
+    public struct MapData
     {
         public float[,] heightMap;
-        //public Vector3[,] normalMap;
+        public Color[] colorMap;
 
-        public Map(float[,] h_map /*, Vector3[,] norm_map*/)
+        public MapData(float[,] heightMap, Color[] colorMap)
         {
-            heightMap = h_map;
-            //normalMap = norm_map;
+            this.heightMap = heightMap;
+            this.colorMap = colorMap;
         }
     }
 
@@ -89,5 +89,6 @@ namespace MapCollections
             return mesh;
         }
     }
+
 }
 

@@ -44,7 +44,7 @@ public class MapGeneratorEditor : Editor
         if (GUILayout.Button("Generate"))
         {
             Debug.Log("Generating map!!");
-            mapGen.drawToPlane();
+            mapGen.DrawToPlane();
         }
 
         if (GUILayout.Button("Write Flat Map"))

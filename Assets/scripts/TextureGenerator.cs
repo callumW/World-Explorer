@@ -32,7 +32,7 @@ using MapCollections;
 public static class TextureGenerator
 {
 
-    public static Texture2D generateFromHeightMap(Map map)
+    public static Texture2D generateFromHeightMap(MapData map)
     {
         int width = map.heightMap.GetLength(0);
         int height = map.heightMap.GetLength(1);

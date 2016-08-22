@@ -25,8 +25,11 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using UnityEngine;
+using System;
 using System.Collections;
 using System.IO;
+using System.Threading;
+using System.Collections.Generic;
 
 using MapCollections;
 
@@ -41,30 +44,83 @@ public class MapGenerator : MonoBehaviour
 
     /* Height Map Vars */
     public string heightMapFileName;
-    public int mapChunkSize;
+    public const int mapChunkSize = 241;
     public float heightMultiplier;
 
     public DrawMode drawMode;
 
+    [Range(0, 6)]
+    public int editorPreviewLOD;
+
+    Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new
+        Queue<MapThreadInfo<MapData>>();
+    Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new
+        Queue<MapThreadInfo<MeshData>>();
+
     void Awake()
     {
-        drawToPlane();
+        DrawToPlane();
     }
 
     /**
      * Generate the map from the height map
      */
-    public Map GenerateMap()
+    public MapData GenerateMap()
     {
         float[,] heightMap = HeightMapReader.ReadHeightMap(heightMapFileName);
-        Map map = new Map(heightMap);
+        Color[] colMap = new Color[heightMap.GetLength(0) * heightMap.GetLength(1)];
+
+        for (int i = 0; i < colMap.Length; i++)
+        {
+            colMap[i] = new Color(0f, 0f, 0f);
+        }
+        MapData map = new MapData(heightMap, colMap);
         return map;
+    }
+
+    public MapData GenerateMapData(Vector2 center)
+    {
+        return GenerateMap();
+    }
+
+    public void requestMapData(Vector2 center, Action<MapData> callback)
+    {
+        ThreadStart threadStart = delegate {
+            MapDataThread(center, callback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    void MapDataThread(Vector2 center, Action<MapData> callback)
+    {
+        MapData mapData = GenerateMapData(center);
+        lock (mapDataThreadInfoQueue) {
+            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
+        }
+    }
+
+    public void requestMeshData(MapData mapData, Action<MeshData> callback, int lod)
+    {
+        ThreadStart threadStart = delegate {
+            MeshDataThread(mapData, lod, callback);
+        };
+        new Thread(threadStart).Start();
+    }
+
+    void MeshDataThread(MapData mapData, int lod, Action<MeshData> callback)
+    {
+        MeshData meshData = MeshGenerator.GenerateMesh(mapData,
+            heightMultiplier, lod);
+        lock (meshDataThreadInfoQueue) {
+            meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
+        }
     }
 
     /**
      * Draw the height to the plane
      */
-    public void drawToPlane()
+    public void DrawToPlane()
     {
         MapPlane plane = FindObjectOfType<MapPlane>();
         if (plane == null)
@@ -98,7 +154,25 @@ public class MapGenerator : MonoBehaviour
      */
     void Update()
     {
-        //drawToPlane();
+        if (mapDataThreadInfoQueue.Count > 0)
+        {
+            for (int i = 0; i < mapDataThreadInfoQueue.Count; i++)
+            {
+                MapThreadInfo<MapData> threadInfo = 
+                    mapDataThreadInfoQueue.Dequeue();
+                threadInfo.callback(threadInfo.param);
+            }
+        }
+
+        if (meshDataThreadInfoQueue.Count > 0)
+        {
+            for (int i = 0; i < meshDataThreadInfoQueue.Count; i++)
+            {
+                MapThreadInfo<MeshData> threadInfo = 
+                    meshDataThreadInfoQueue.Dequeue();
+                threadInfo.callback(threadInfo.param);
+            }
+        }
     }//End of Update
 
 
@@ -106,7 +180,7 @@ public class MapGenerator : MonoBehaviour
      */
     void Start()
     {
-        drawToPlane();
+        DrawToPlane();
     }//End of Start
 
     /**
@@ -128,11 +202,11 @@ public class MapGenerator : MonoBehaviour
         {
             print("File: " + heightMapFileName + " exists!");
         }
-
+        /*
         if (mapChunkSize <= 0)
         {
             mapChunkSize = 255;
-        }
+        }*/
 
         if (heightMultiplier <= 0f)
         {
@@ -140,4 +214,16 @@ public class MapGenerator : MonoBehaviour
         }
 
     }//End of OnValidate
+}
+
+public struct MapThreadInfo<T>
+{
+    public readonly Action<T> callback;
+    public readonly T param;
+
+    public MapThreadInfo(Action<T> callback, T param)
+    {
+        this.callback = callback;
+        this.param = param;
+    }
 }
