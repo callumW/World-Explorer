@@ -164,9 +164,10 @@ public class Map : MonoBehaviour {
         {
             mapData = md;
             mapDataReceived = true;
-            Texture2D tex = TextureGenerator.generateFromColorMap(
+            /*Texture2D tex = TextureGenerator.generateFromColorMap(
                 mapData.colorMap, MapGenerator.mapChunkSize, 
-                MapGenerator.mapChunkSize);
+                MapGenerator.mapChunkSize);*/
+            Texture2D tex = TextureGenerator.generateFromHeightMap(md);
             meshRenderer.material.mainTexture = tex;
             UpdateMapChunk();
         }
