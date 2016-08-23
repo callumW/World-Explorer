@@ -144,7 +144,7 @@ public class MapGenerator : MonoBehaviour
         else if (drawMode == DrawMode.mesh)
         {
             plane.DrawMesh(MeshGenerator.GenerateMesh(GenerateMap(),
-                heightMultiplier, 0),
+                heightMultiplier, editorPreviewLOD),
                 TextureGenerator.generateFromHeightMap(GenerateMap()));
         }
     }

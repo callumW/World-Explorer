@@ -33,7 +33,7 @@ public class Map : MonoBehaviour {
 
     private const float scale = 1f;
 
-    private const float moveDelay = 25f;
+    private const float moveDelay = 10f;
     private const float sqrMoveDelay = moveDelay * moveDelay;
 
     private static MapGenerator mapGen;
@@ -70,7 +70,7 @@ public class Map : MonoBehaviour {
     {
         for (int i = 0; i < chunksVisibleLastUpdate.Count; i++)
         {
-            chunksVisibleLastUpdate[i].SetVisible(true);
+            chunksVisibleLastUpdate[i].SetVisible(false);
         }
         chunksVisibleLastUpdate.Clear();
 
@@ -106,7 +106,7 @@ public class Map : MonoBehaviour {
     {
         cameraPosition.x = transform.position.x;
         cameraPosition.y = transform.position.z;
-        if ((cameraPositionOld - cameraPositionOld).sqrMagnitude > sqrMoveDelay)
+        if ((cameraPositionOld - cameraPosition).sqrMagnitude > sqrMoveDelay)
         {
             cameraPositionOld = cameraPosition;
             UpdateVisibleChunks();

@@ -50,7 +50,7 @@ public class MapGeneratorEditor : Editor
         if (GUILayout.Button("Write Flat Map"))
         {
             if (HeightMapWriter.WriteFlatMap(Application.dataPath + "/map.hm",
-                    255, 255))
+                    241, 241))
             {
                 Debug.Log("Successfully written heightmap");
             }
