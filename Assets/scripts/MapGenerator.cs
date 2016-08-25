@@ -64,7 +64,7 @@ public class MapGenerator : MonoBehaviour
 
     void Awake()
     {
-        DrawToPlane();
+        //DrawToPlane();
     }
 
     /**
@@ -112,17 +112,21 @@ public class MapGenerator : MonoBehaviour
 
         MapData[,] maps = new MapData[mapWidthChunks, mapHeightChunks];
 
-        Color[] colMap = new Color[mapChunkSize * mapChunkSize];
-        float[,] chunkHeightMap = new float[mapChunkSize, mapChunkSize];
+
 
         for (int chunkY = 0; chunkY < mapHeightChunks; chunkY++)
         {
             int endYIndex = (chunkY + 1) * mapChunkSize;
             int startYIndex = chunkY * mapChunkSize;
+
             for (int chunkX = 0; chunkX < mapWidthChunks; chunkX++)
             {
                 int endXIndex = (chunkX + 1) * mapChunkSize;
                 int startXIndex = chunkX * mapChunkSize;
+
+                Color[] colMap = new Color[mapChunkSize * mapChunkSize];
+                float[,] chunkHeightMap = new float[mapChunkSize, mapChunkSize];
+
 
                 int localY = 0;
                 for (int y = startYIndex; y < endYIndex; y++)
@@ -278,7 +282,8 @@ public class MapGenerator : MonoBehaviour
      */
     void Start()
     {
-        heightMapFileName = Application.dataPath + "/" + heightMapName;
+        OnValidate();
+        //heightMapFileName = Application.dataPath + "/" + heightMapName;
         DrawToPlane();
     }//End of Start
 
