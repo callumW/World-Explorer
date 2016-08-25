@@ -40,15 +40,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    int width = 241;
-    int height = 241;
-    std::string file_name = "F:\\code\\World-Explorer\\Assets\\map.hm";
+    int width = 1205;
+    int height = 1205;
+    std::string file_name = "F:\\code\\World-Explorer\\Assets\\map2.hm";
+
+	std::cout << "Note: the file size of your map will be: " << width * height * sizeof(float) + 2 * sizeof(int) + 2 * sizeof(float) << "Bytes" << std::endl;
 
     Height_map h_map{width, height};
 
     if (!h_map.write_out(file_name)) {
         std::cout << "Failed to write height map!" << std::endl;
     }
+	else {
+		std::cout << "Succesfully written height map!" << std::endl;
+	}
 
 	char c;
 	std::cin >> c;

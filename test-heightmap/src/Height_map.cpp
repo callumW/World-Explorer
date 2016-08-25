@@ -55,11 +55,13 @@ float get_height(float x, float y, float z)
 Height_map::Height_map(int w, int h)
     :width{w}, height{h}
 {
+	std::cout << "Generating heightmap" << std::endl;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             map.push_back(Point{get_height(0.004f * x, 0.004f * y)});
         }
     }
+	std::cout << "Height map generated" << std::endl;
 }
 
 bool Height_map::write_out(const std::string& file_name)

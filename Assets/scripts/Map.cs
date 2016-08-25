@@ -38,12 +38,20 @@ public class Map : MonoBehaviour {
 
     private static MapGenerator mapGen;
 
+    public MapData[,] map;
+    private int chunkedMapWidth;
+    private int chunkedMapHeight;
+    private Vector2 chunkedMapStart;
+
+    public bool chunkedMap = false;
+
     public LODData[] lods;
     public static float maxViewDst;
 
     private int chunkSize;
     private int chunksVisibleInViewDst;
 
+    private Vector2 startingCameraPosition;
     private static Vector2 cameraPosition;
     private Vector2 cameraPositionOld;
     public Material mapMaterial;
@@ -58,11 +66,22 @@ public class Map : MonoBehaviour {
     {
         mapGen = FindObjectOfType<MapGenerator>();
 
+
         maxViewDst = lods[lods.Length - 1].minViewableDistance;
         chunkSize = MapGenerator.mapChunkSize - 1;
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
         cameraPosition = new Vector2(transform.position.x, transform.position.z);
         cameraPositionOld = cameraPosition;
+        startingCameraPosition = cameraPosition;
+
+        map = mapGen.GenerateChunkedMap();
+        chunkedMapWidth = map.GetLength(0);
+        chunkedMapHeight = map.GetLength(1);
+        chunkedMapStart = new Vector2(0f - (chunkedMapWidth * chunkSize) / 2,
+            0f - (chunkedMapHeight * chunkSize) / 2);
+            
+        Debug.Log("chunked map info:\nWidth: " + chunkedMapWidth + "\nHeight: "
+            + chunkedMapHeight + "\nStart pos: " + chunkedMapStart);
         UpdateVisibleChunks();
 	}
 
@@ -74,27 +93,83 @@ public class Map : MonoBehaviour {
         }
         chunksVisibleLastUpdate.Clear();
 
-        int currentChunkCoordX = Mathf.RoundToInt(cameraPosition.x / chunkSize);
-        int currentChunkCoordY = Mathf.RoundToInt(cameraPosition.y / chunkSize);
 
-        for (int yOffset = -chunksVisibleInViewDst;
-            yOffset <= chunksVisibleInViewDst; yOffset++)
+        if (!chunkedMap)
         {
-            for (int xOffset = -chunksVisibleInViewDst;
-                xOffset <= chunksVisibleInViewDst; xOffset++)
+            int currentChunkCoordX = Mathf.RoundToInt(cameraPosition.x / chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(cameraPosition.y / chunkSize);
+
+            for (int yOffset = -chunksVisibleInViewDst;
+                yOffset <= chunksVisibleInViewDst; yOffset++)
             {
-                Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX +
-                   xOffset, currentChunkCoordY + yOffset);
-            
-                if (mapChunkDictionary.ContainsKey(viewedChunkCoord))
+                for (int xOffset = -chunksVisibleInViewDst;
+                    xOffset <= chunksVisibleInViewDst; xOffset++)
                 {
-                    mapChunkDictionary[viewedChunkCoord].UpdateMapChunk();
+                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX +
+                                                   xOffset, currentChunkCoordY + yOffset);
+                
+                    if (mapChunkDictionary.ContainsKey(viewedChunkCoord))
+                    {
+                        mapChunkDictionary[viewedChunkCoord].UpdateMapChunk();
+                    }
+                    else
+                    {
+                        mapChunkDictionary.Add(viewedChunkCoord,
+                            new MapChunk(viewedChunkCoord, chunkSize, lods, 
+                                transform, mapMaterial));
+                    }
                 }
-                else
+            }
+        }
+        else
+        { 
+            int currentChunkCoordX = Mathf.RoundToInt(cameraPosition.x 
+                / chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(cameraPosition.y 
+                / chunkSize);
+
+            if (currentChunkCoordX > Mathf.RoundToInt(chunkedMapWidth / 2f) || currentChunkCoordX < Mathf.RoundToInt(0f - chunkedMapWidth / 2f))
+            {
+                return;
+            }
+
+            if (currentChunkCoordY > Mathf.RoundToInt(chunkedMapHeight / 2f) || currentChunkCoordY < Mathf.RoundToInt(0f - chunkedMapHeight / 2f))
+            {
+                return;
+            }
+
+            for (int yOffset = -chunksVisibleInViewDst;
+                yOffset <= chunksVisibleInViewDst; yOffset++)
+            {
+                for (int xOffset = -chunksVisibleInViewDst;
+                    xOffset <= chunksVisibleInViewDst; xOffset++)
                 {
-                    mapChunkDictionary.Add(viewedChunkCoord,
-                        new MapChunk(viewedChunkCoord, chunkSize, lods, 
-                            transform, mapMaterial));
+                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX +
+                        xOffset, currentChunkCoordY + yOffset);
+                   
+                    if (viewedChunkCoord.x > Mathf.RoundToInt(chunkedMapWidth / 2f) || viewedChunkCoord.x < Mathf.RoundToInt(0f - chunkedMapWidth / 2f))
+                    {
+                        return;
+                    }
+
+                    if (viewedChunkCoord.y > Mathf.RoundToInt(chunkedMapHeight / 2f) || viewedChunkCoord.y < Mathf.RoundToInt(0f - chunkedMapHeight / 2f))
+                    {
+                        return;
+                    }
+
+                    if (mapChunkDictionary.ContainsKey(viewedChunkCoord))
+                    {
+                        mapChunkDictionary[viewedChunkCoord].UpdateMapChunk();
+                    }
+                    else
+                    {
+                        Debug.Log("Adding chunk: (" + (viewedChunkCoord.x + Mathf.RoundToInt(chunkedMapWidth/2f))
+                            + ", " + (viewedChunkCoord.y + Mathf.RoundToInt(chunkedMapHeight/2f))
+                        + ")\n");
+                        mapChunkDictionary.Add(viewedChunkCoord,
+                            new MapChunk(viewedChunkCoord, chunkSize, currentChunkCoordX, currentChunkCoordY, lods, 
+                                transform, mapMaterial, map[Mathf.RoundToInt(viewedChunkCoord.x + chunkedMapWidth/2f), Mathf.RoundToInt(viewedChunkCoord.y + chunkedMapHeight/2f)]));
+                    }
                 }
             }
         }
@@ -141,7 +216,7 @@ public class Map : MonoBehaviour {
             meshObject = new GameObject("Map Chunk");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
-            meshRenderer.material = material;
+            meshRenderer.material = new Material(Shader.Find("Standard"));
 
             meshObject.transform.position = posV3 * scale;
             meshObject.transform.parent = null;
@@ -160,14 +235,44 @@ public class Map : MonoBehaviour {
             mapGen.requestMapData(position, OnMapDataReceived);
         }
 
+        public MapChunk(Vector2 pos, int size, int chunkX, int chunkY, LODData[] lods, Transform parent,
+            Material material, MapData md)
+        {
+            this.lods = lods;
+            position = pos * size;
+            bounds = new Bounds(position, Vector2.one * size);
+            Vector3 posV3 = new Vector3(position.x, 0, position.y);
+
+            meshObject = new GameObject("Map Chunk");
+            meshRenderer = meshObject.AddComponent<MeshRenderer>();
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshRenderer.material = new Material(Shader.Find("Standard"));
+
+            meshObject.transform.position = posV3 * scale;
+            meshObject.transform.parent = null;
+            meshObject.transform.localScale = Vector3.one * scale;
+            meshObject.transform.rotation = Quaternion.identity;
+            meshObject.transform.localRotation = Quaternion.identity;
+
+            SetVisible(false);
+
+            lodMeshes = new LODMesh[this.lods.Length];
+            for (int i = 0; i < lodMeshes.Length; i++)
+            {
+                lodMeshes[i] = new LODMesh(lods[i].lod, UpdateMapChunk);
+            }
+
+            OnMapDataReceived(md);
+        }
+
         void OnMapDataReceived(MapData md)
         {
             mapData = md;
             mapDataReceived = true;
-            /*Texture2D tex = TextureGenerator.generateFromColorMap(
+            Texture2D tex = TextureGenerator.generateFromColorMap(
                 mapData.colorMap, MapGenerator.mapChunkSize, 
-                MapGenerator.mapChunkSize);*/
-            Texture2D tex = TextureGenerator.generateFromHeightMap(md);
+                MapGenerator.mapChunkSize);
+            //Texture2D tex = TextureGenerator.generateFromHeightMap(md);
             meshRenderer.material.mainTexture = tex;
             UpdateMapChunk();
         }

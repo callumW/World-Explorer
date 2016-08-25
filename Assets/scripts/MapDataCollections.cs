@@ -90,5 +90,19 @@ namespace MapCollections
         }
     }
 
+    /**
+     * Basic biome for coloring the terrain texture
+     */
+    [System.Serializable]
+    public struct Biome 
+    {
+        public float minHeight;
+        public Color color;
+        Biome(float height, Color c)
+        {
+            minHeight = height;
+            color = c;
+        }
+    }
 }
 

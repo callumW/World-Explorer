@@ -43,11 +43,16 @@ public class MapGenerator : MonoBehaviour
 {
 
     /* Height Map Vars */
-    public string heightMapFileName;
+    public string heightMapName;
+    public string chunkedMapName;
+    string heightMapFileName;
+    string chunkedMapFileName;
     public const int mapChunkSize = 241;
     public float heightMultiplier;
 
     public DrawMode drawMode;
+
+    public Biome[] biomes;
 
     [Range(0, 6)]
     public int editorPreviewLOD;
@@ -68,19 +73,93 @@ public class MapGenerator : MonoBehaviour
     public MapData GenerateMap()
     {
         float[,] heightMap = HeightMapReader.ReadHeightMap(heightMapFileName);
-        Color[] colMap = new Color[heightMap.GetLength(0) * heightMap.GetLength(1)];
+        int width = heightMap.GetLength(0);
+        int height = heightMap.GetLength(1);
 
-        for (int i = 0; i < colMap.Length; i++)
+        Color[] colMap = new Color[width * height];
+
+        for (int y = 0; y < height; y++)
         {
-            colMap[i] = new Color(0f, 0f, 0f);
+            for (int x = 0; x < width; x++)
+            {
+                int biomeIndex;
+                for (biomeIndex = 0; biomeIndex < biomes.Length; biomeIndex++)
+                {
+                    if (biomes[biomeIndex].minHeight > heightMap[x, y])
+                    {
+                        break;
+                    }
+                }
+                colMap[y * width + x] = (biomeIndex == 0) ? biomes[0].color : 
+                    biomes[biomeIndex - 1].color;
+            }
         }
         MapData map = new MapData(heightMap, colMap);
         return map;
     }
 
+    /**
+     * Generate the map from the height map
+     */
+    public MapData[,] GenerateChunkedMap()
+    {
+        float[,] heightMap = HeightMapReader.ReadHeightMap(chunkedMapFileName);
+        int width = heightMap.GetLength(0);
+        int height = heightMap.GetLength(1);
+
+        int mapWidthChunks = width / mapChunkSize;
+        int mapHeightChunks = height / mapChunkSize;
+
+        MapData[,] maps = new MapData[mapWidthChunks, mapHeightChunks];
+
+        Color[] colMap = new Color[mapChunkSize * mapChunkSize];
+        float[,] chunkHeightMap = new float[mapChunkSize, mapChunkSize];
+
+        for (int chunkY = 0; chunkY < mapHeightChunks; chunkY++)
+        {
+            int endYIndex = (chunkY + 1) * mapChunkSize;
+            int startYIndex = chunkY * mapChunkSize;
+            for (int chunkX = 0; chunkX < mapWidthChunks; chunkX++)
+            {
+                int endXIndex = (chunkX + 1) * mapChunkSize;
+                int startXIndex = chunkX * mapChunkSize;
+
+                int localY = 0;
+                for (int y = startYIndex; y < endYIndex; y++)
+                {
+                    int localX = 0;
+                    for (int x = startXIndex; x < endXIndex; x++)
+                    {
+                        chunkHeightMap[localX, localY] = heightMap[x, y];
+                        int biomeIndex;
+                        for (biomeIndex = 0; biomeIndex < biomes.Length; biomeIndex++)
+                        {
+                            if (biomes[biomeIndex].minHeight > heightMap[x, y])
+                            {
+                                break;
+                            }
+                        }
+                        colMap[localY * mapChunkSize + localX] = 
+                            (biomeIndex == 0) ? biomes[0].color : 
+                                biomes[biomeIndex - 1].color;
+                        localX++;
+                    }
+                    localY++;
+                }
+                maps[chunkX, chunkY] = new MapData(chunkHeightMap, colMap);
+            }
+        }
+        return maps;
+    }
+
     public MapData GenerateMapData(Vector2 center)
     {
         return GenerateMap();
+    }
+
+    public MapData GenerateMapData(Vector2 center, int chunkX, int chunkY)
+    {
+        return GenerateChunkedMap()[chunkX, chunkY];
     }
 
     public void requestMapData(Vector2 center, Action<MapData> callback)
@@ -92,11 +171,30 @@ public class MapGenerator : MonoBehaviour
         new Thread(threadStart).Start();
     }
 
+    public void requestMapData(Vector2 center, int chunkX, int chunkY, Action<MapData> callback)
+    {
+        ThreadStart threadStart = delegate {
+            MapDataThread(center, chunkX, chunkY, callback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
     void MapDataThread(Vector2 center, Action<MapData> callback)
     {
         MapData mapData = GenerateMapData(center);
         lock (mapDataThreadInfoQueue) {
-            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
+            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, 
+                mapData));
+        }
+    }
+
+    void MapDataThread(Vector2 center, int chunkX, int chunkY, Action<MapData> callback)
+    {
+        MapData mapData = GenerateMapData(center, chunkX, chunkY);
+        lock (mapDataThreadInfoQueue) {
+            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, 
+                mapData));
         }
     }
 
@@ -180,6 +278,7 @@ public class MapGenerator : MonoBehaviour
      */
     void Start()
     {
+        heightMapFileName = Application.dataPath + "/" + heightMapName;
         DrawToPlane();
     }//End of Start
 
@@ -188,19 +287,26 @@ public class MapGenerator : MonoBehaviour
      */
     void OnValidate()
     {
-        if (heightMapFileName.Equals(""))
+        if (heightMapName.Equals(""))
         {
             print("Error: No height map was specified");
-            heightMapFileName = Application.dataPath;
-        }
-        else if (!File.Exists(heightMapFileName))
-        {
-            print("File: " + heightMapFileName + " does not exist!");
-            heightMapFileName = Application.dataPath;
+            //heightMapName = Application.dataPath;
         }
         else
         {
-            print("File: " + heightMapFileName + " exists!");
+            heightMapFileName = Application.dataPath + "/" + heightMapName;
+            print("heightmap path: " + heightMapFileName);
+        }
+
+        if (heightMapName.Equals(""))
+        {
+            print("Error: No height map was specified");
+            //heightMapName = Application.dataPath;
+        }
+        else
+        {
+            chunkedMapFileName = Application.dataPath + "/" + chunkedMapName;
+            print("heightmap path: " + chunkedMapFileName);
         }
         /*
         if (mapChunkSize <= 0)

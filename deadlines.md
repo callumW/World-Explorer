@@ -1,11 +1,12 @@
 # Deadlines
 ### 2016-08-26
 + Fly around a map with:
-  + dynamically loading chunks.
-  + level of detail.
-  + some basic texture.
+  + ~~dynamically loading chunks.~~
+  + ~~level of detail.~~
+  + ~~some basic texture.~~
 + Clean up code:
-  + Move structs into appropriate files so we can use the ```using``` keyword.
+  + ~~Move structs into appropriate files so we can use the ```using```
+    keyword.~~
 
 ### 2016-09-02
 + Integration with (dummy) library:
