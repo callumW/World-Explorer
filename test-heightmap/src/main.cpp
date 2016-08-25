@@ -40,8 +40,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    int width = 1205;
-    int height = 1205;
+    int width = 2410;
+    int height = 2410;
     std::string file_name = "F:\\code\\World-Explorer\\Assets\\map2.hm";
 
 	std::cout << "Note: the file size of your map will be: " << width * height * sizeof(float) + 2 * sizeof(int) + 2 * sizeof(float) << "Bytes" << std::endl;

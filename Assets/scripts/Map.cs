@@ -77,8 +77,8 @@ public class Map : MonoBehaviour {
         map = mapGen.GenerateChunkedMap();
         chunkedMapWidth = map.GetLength(0);
         chunkedMapHeight = map.GetLength(1);
-        chunkedMapStart = new Vector2(0f - (chunkedMapWidth * chunkSize) / 2,
-            0f - (chunkedMapHeight * chunkSize) / 2);
+        chunkedMapStart = new Vector2(0f - chunkedMapWidth / 2f,
+            chunkedMapHeight / 2f);
             
         Debug.Log("chunked map info:\nWidth: " + chunkedMapWidth + "\nHeight: "
             + chunkedMapHeight + "\nStart pos: " + chunkedMapStart);
@@ -122,53 +122,25 @@ public class Map : MonoBehaviour {
             }
         }
         else
-        { 
-            int currentChunkCoordX = Mathf.RoundToInt(cameraPosition.x 
-                / chunkSize);
-            int currentChunkCoordY = Mathf.RoundToInt(cameraPosition.y 
-                / chunkSize);
-
-            if (currentChunkCoordX > Mathf.RoundToInt(chunkedMapWidth / 2f) || currentChunkCoordX < Mathf.RoundToInt(0f - chunkedMapWidth / 2f))
+        {
+            for (int y = 0; y < chunkedMapHeight; y++)
             {
-                return;
-            }
-
-            if (currentChunkCoordY > Mathf.RoundToInt(chunkedMapHeight / 2f) || currentChunkCoordY < Mathf.RoundToInt(0f - chunkedMapHeight / 2f))
-            {
-                return;
-            }
-
-            for (int yOffset = -chunksVisibleInViewDst;
-                yOffset <= chunksVisibleInViewDst; yOffset++)
-            {
-                for (int xOffset = -chunksVisibleInViewDst;
-                    xOffset <= chunksVisibleInViewDst; xOffset++)
+                float mapY = chunkedMapStart.y - y;
+                for (int x = 0; x < chunkedMapWidth; x++)
                 {
-                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX +
-                        xOffset, currentChunkCoordY + yOffset);
-                   
-                    if (viewedChunkCoord.x > Mathf.RoundToInt(chunkedMapWidth / 2f) || viewedChunkCoord.x < Mathf.RoundToInt(0f - chunkedMapWidth / 2f))
-                    {
-                        return;
-                    }
+                    float mapX = chunkedMapStart.x + x;
 
-                    if (viewedChunkCoord.y > Mathf.RoundToInt(chunkedMapHeight / 2f) || viewedChunkCoord.y < Mathf.RoundToInt(0f - chunkedMapHeight / 2f))
-                    {
-                        return;
-                    }
+                    Vector2 mapChunkPos = new Vector2(mapX, mapY);
 
-                    if (mapChunkDictionary.ContainsKey(viewedChunkCoord))
+                    if (mapChunkDictionary.ContainsKey(mapChunkPos))
                     {
-                        mapChunkDictionary[viewedChunkCoord].UpdateMapChunk();
+                        mapChunkDictionary[mapChunkPos].UpdateMapChunk();
                     }
                     else
                     {
-                        Debug.Log("Adding chunk: (" + (viewedChunkCoord.x + Mathf.RoundToInt(chunkedMapWidth/2f))
-                            + ", " + (viewedChunkCoord.y + Mathf.RoundToInt(chunkedMapHeight/2f))
-                        + ")\n");
-                        mapChunkDictionary.Add(viewedChunkCoord,
-                            new MapChunk(viewedChunkCoord, chunkSize, currentChunkCoordX, currentChunkCoordY, lods, 
-                                transform, mapMaterial, map[Mathf.RoundToInt(viewedChunkCoord.x + chunkedMapWidth/2f), Mathf.RoundToInt(viewedChunkCoord.y + chunkedMapHeight/2f)]));
+                        mapChunkDictionary.Add(mapChunkPos,
+                            new MapChunk(mapChunkPos, chunkSize, x, y, lods, 
+                                transform, mapMaterial, map[x, y]));
                     }
                 }
             }
@@ -243,7 +215,7 @@ public class Map : MonoBehaviour {
             bounds = new Bounds(position, Vector2.one * size);
             Vector3 posV3 = new Vector3(position.x, 0, position.y);
 
-            meshObject = new GameObject("Map Chunk");
+            meshObject = new GameObject("Chunk (" + chunkX + ", " + chunkY + ")");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRenderer.material = new Material(Shader.Find("Standard"));
