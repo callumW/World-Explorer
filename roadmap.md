@@ -4,7 +4,8 @@ are of high priority and are awaiting to be implemented; items with no
 decoration are of indeterminate priority and are awaiting to be implemented;
 items that have a ~~strikethrough~~ have been implemented.
 
-+ **Add gui to specify heightmap**
++ Add debug console
++ ~~**Add gui to specify heightmap**~~
 + Fix chunk seams
 + ~~**Create a chunked mesh from a heightmap**~~
 + ~~Add a colored texture to the mesh~~
