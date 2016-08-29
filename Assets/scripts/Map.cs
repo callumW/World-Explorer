@@ -51,7 +51,6 @@ public class Map : MonoBehaviour {
     private int chunkSize;
     private int chunksVisibleInViewDst;
 
-    private Vector2 startingCameraPosition;
     private static Vector2 cameraPosition;
     private Vector2 cameraPositionOld;
     public Material mapMaterial;
@@ -83,7 +82,6 @@ public class Map : MonoBehaviour {
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
         cameraPosition = new Vector2(transform.position.x, transform.position.z);
         cameraPositionOld = cameraPosition;
-        startingCameraPosition = cameraPosition;
 
         map = mapGen.GenerateChunkedMap();
         chunkedMapWidth = map.GetLength(0);
