@@ -61,11 +61,22 @@ public class Map : MonoBehaviour {
 
     static List<MapChunk> chunksVisibleLastUpdate = new List<MapChunk>();
 
+    public void Reset()
+    {
+        foreach (KeyValuePair<Vector2, MapChunk> entry in mapChunkDictionary)
+        {
+            entry.Value.SetVisible(false);
+            entry.Value.destroy();
+        }
+        mapChunkDictionary.Clear();
+        chunksVisibleLastUpdate.Clear();
+    }
+
 	// Use this for initialization
 	void Start () 
     {
-        mapGen = FindObjectOfType<MapGenerator>();
-
+        mapGen = FindObjectOfType<MapGenerator>(); //TODO Not a fan of this
+        mapGen.SetMapRef(this);
 
         maxViewDst = lods[lods.Length - 1].minViewableDistance;
         chunkSize = MapGenerator.mapChunkSize - 1;
@@ -151,6 +162,7 @@ public class Map : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        /* Update posistion variables */
         cameraPosition.x = transform.position.x;
         cameraPosition.y = transform.position.z;
         if ((cameraPositionOld - cameraPosition).sqrMagnitude > sqrMoveDelay)
@@ -190,6 +202,7 @@ public class Map : MonoBehaviour {
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRenderer.material = new Material(Shader.Find("Standard"));
 
+            /* set the location, scale and rotation of the map chunk */
             meshObject.transform.position = posV3 * scale;
             meshObject.transform.parent = null;
             meshObject.transform.localScale = Vector3.one * scale;
@@ -198,6 +211,7 @@ public class Map : MonoBehaviour {
 
             SetVisible(false);
 
+            /* Populate the meshes for this chunk */
             lodMeshes = new LODMesh[this.lods.Length];
             for (int i = 0; i < lodMeshes.Length; i++)
             {
@@ -297,6 +311,11 @@ public class Map : MonoBehaviour {
         public bool IsVisible()
         {
             return meshObject.activeSelf;
+        }
+
+        public void destroy()
+        {
+            Destroy(meshObject);
         }
     }
 

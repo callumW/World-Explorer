@@ -62,6 +62,8 @@ public class MapGenerator : MonoBehaviour
     Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new
         Queue<MapThreadInfo<MeshData>>();
 
+    private Map mapReference;
+
     void Awake()
     {
         //DrawToPlane();
@@ -325,6 +327,25 @@ public class MapGenerator : MonoBehaviour
         }
 
     }//End of OnValidate
+
+    public void ChangeMap(string newMapName) {
+        print("Height map: " + newMapName + "\n");
+        if (File.Exists(Application.dataPath + "/" + newMapName))
+        {
+            heightMapName = newMapName;
+            this.OnValidate();
+            mapReference.Reset();        
+        }
+        else
+        {
+            print("New height map does not exist!\n");
+        }
+    }
+
+    public void SetMapRef(Map m)
+    {
+        mapReference = m;
+    }
 }
 
 public struct MapThreadInfo<T>
