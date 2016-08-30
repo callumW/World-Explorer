@@ -101,11 +101,30 @@ public class MapGenerator : MonoBehaviour
     }
 
     /**
+     * Calculate the mid point between to values
+     * \param a
+     * \param b
+     * \return the mid point
+     */
+    float CalcMidPoint(float a, float b)
+    {
+        return (a + b) / 2;
+        //Note: could also use Mathf.Abs()
+    }
+
+    float CalcMidPoint(float a, float b, float c, float d)
+    {
+        return (a + b + c + d) / 4;
+    }
+
+    /**
      * Generate the map from the height map
      */
     public MapData[,] GenerateChunkedMap()
     {
         float[,] heightMap = HeightMapReader.ReadHeightMap(chunkedMapFileName);
+
+
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
 
@@ -115,27 +134,139 @@ public class MapGenerator : MonoBehaviour
         MapData[,] maps = new MapData[mapWidthChunks, mapHeightChunks];
 
 
-
         for (int chunkY = 0; chunkY < mapHeightChunks; chunkY++)
         {
-            int endYIndex = (chunkY + 1) * mapChunkSize;
+            int endYIndex = (chunkY + 1) * mapChunkSize - 1;
             int startYIndex = chunkY * mapChunkSize;
 
             for (int chunkX = 0; chunkX < mapWidthChunks; chunkX++)
             {
-                int endXIndex = (chunkX + 1) * mapChunkSize;
+                int endXIndex = (chunkX + 1) * mapChunkSize - 1;
                 int startXIndex = chunkX * mapChunkSize;
 
                 Color[] colMap = new Color[mapChunkSize * mapChunkSize];
                 float[,] chunkHeightMap = new float[mapChunkSize, mapChunkSize];
 
+                /* Fix edge values so the meshes have no seams */
+                if (chunkX != 0 && chunkX != mapWidthChunks - 1)
+                {
+                    if (chunkY != 0 && chunkY != mapHeightChunks - 1)
+                    {
+                        /* fix left side of chunk */
+                        for (int y = startYIndex; y <= endYIndex; y++)
+                        {
+                            if (heightMap[startXIndex, y] !=
+                                heightMap[startXIndex - 1, y])
+                            {
+                                float val = CalcMidPoint(heightMap[startXIndex, 
+                                    y], heightMap[startXIndex - 1, y]);
+                                
+                                heightMap[startXIndex, y] = val;
+                                heightMap[startXIndex - 1, y] = val;
+                            }
+                        }
+
+
+
+                        /* fix top side of chunk */
+                        for (int x = startXIndex; x <= endXIndex; x++)
+                        {
+                            if (heightMap[x, startYIndex] !=
+                                heightMap[x, startYIndex - 1])
+                            {
+                                float val = CalcMidPoint(
+                                                heightMap[x, startYIndex],
+                                                heightMap[x, startYIndex - 1]);
+                                
+                                heightMap[x, startYIndex] = val;
+                                heightMap[x, startYIndex - 1] = val;
+                            }
+                        }
+
+                        /* fix right side of chunk */
+                        for (int y = startYIndex; y <= endYIndex; y++)
+                        {
+                            if (heightMap[endXIndex, y] !=
+                                heightMap[endXIndex + 1, y])
+                            {
+                                float val = CalcMidPoint(
+                                                heightMap[endXIndex, y],
+                                                heightMap[endXIndex + 1, y]);
+
+                                heightMap[endXIndex, y] = val;
+                                heightMap[endXIndex + 1, y] = val;
+                            }
+                        }
+
+                        /* fix bottom side of chunk */
+                        for (int x = startXIndex; x <= endXIndex; x++)
+                        {
+                            if (heightMap[x, endYIndex] !=
+                                heightMap[x, endYIndex + 1])
+                            {
+                                float val = CalcMidPoint(
+                                                heightMap[x, endYIndex],
+                                                heightMap[x, endYIndex + 1]);
+
+                                heightMap[x, endYIndex] = val;
+                                heightMap[x, endYIndex + 1] = val;
+                            }
+                        }
+
+                        /* Fix corners */
+                        float tLCorner = CalcMidPoint(
+                            heightMap[startXIndex, startYIndex],
+                            heightMap[startXIndex - 1, startYIndex],
+                            heightMap[startXIndex, startYIndex - 1],
+                            heightMap[startXIndex - 1, startYIndex - 1]);
+
+                        heightMap[startXIndex, startYIndex] = tLCorner;
+                        heightMap[startXIndex - 1, startYIndex] = tLCorner;
+                        heightMap[startXIndex, startYIndex - 1] = tLCorner;
+                        heightMap[startXIndex - 1, startYIndex - 1] = tLCorner;
+
+                        float tRCorner = CalcMidPoint(
+                            heightMap[endXIndex, startYIndex],
+                            heightMap[endXIndex, startYIndex - 1],
+                            heightMap[endXIndex+1, startYIndex],
+                            heightMap[endXIndex+1, startYIndex-1]);
+
+                        heightMap[endXIndex, startYIndex] = tRCorner;
+                        heightMap[endXIndex, startYIndex - 1] = tRCorner;
+                        heightMap[endXIndex+1, startYIndex] = tRCorner;
+                        heightMap[endXIndex+1, startYIndex-1] = tRCorner;
+                        
+                        float bLCorner = CalcMidPoint(
+                            heightMap[startXIndex, endYIndex],
+                            heightMap[startXIndex-1, endYIndex],
+                            heightMap[startXIndex, endYIndex+1],
+                            heightMap[startXIndex-1, endYIndex+1]);
+
+                        heightMap[startXIndex, endYIndex] = bLCorner;
+                        heightMap[startXIndex-1, endYIndex] = bLCorner;
+                        heightMap[startXIndex, endYIndex+1] = bLCorner;
+                        heightMap[startXIndex-1, endYIndex+1] = bLCorner;
+                       
+                        float bRCorner = CalcMidPoint(
+                            heightMap[endXIndex, endYIndex],
+                            heightMap[endXIndex, endYIndex+1],
+                            heightMap[endXIndex+1, endYIndex],
+                            heightMap[endXIndex+1, endYIndex+1]);
+
+                        heightMap[endXIndex, endYIndex] = bRCorner;
+                        heightMap[endXIndex, endYIndex+1] = bRCorner;
+                        heightMap[endXIndex+1, endYIndex] = bRCorner;
+                        heightMap[endXIndex+1, endYIndex+1] = bRCorner;
+                    }
+                }
 
                 int localY = 0;
-                for (int y = startYIndex; y < endYIndex; y++)
+                for (int y = startYIndex; y <= endYIndex; y++)
                 {
                     int localX = 0;
-                    for (int x = startXIndex; x < endXIndex; x++)
+                    for (int x = startXIndex; x <= endXIndex; x++)
                     {
+                        
                         chunkHeightMap[localX, localY] = heightMap[x, y];
                         int biomeIndex;
                         for (biomeIndex = 0; biomeIndex < biomes.Length; biomeIndex++)
