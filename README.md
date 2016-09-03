@@ -21,7 +21,7 @@ except the files in the following directories:
 + [ProjectSettings](ProjectSettings/)
 
 The files in these directories are Unity files and I don't know their
-licensing information.
+licensing information. TODO: Rewrite this.
 
 All files under the MIT license will be marked as such. See
 [License.md](License.md) for more information.
