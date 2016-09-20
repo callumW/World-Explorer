@@ -48,6 +48,7 @@ public class Map : MonoBehaviour {
     public LODData[] lods;
     public static float maxViewDst;
 
+
     private int chunkSize;
     private int chunksVisibleInViewDst;
 
@@ -198,7 +199,7 @@ public class Map : MonoBehaviour {
             meshObject = new GameObject("Map Chunk");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
-            meshRenderer.material = new Material(Shader.Find("Standard"));
+            meshRenderer.material = material;
 
             /* set the location, scale and rotation of the map chunk */
             meshObject.transform.position = posV3 * scale;
@@ -230,7 +231,7 @@ public class Map : MonoBehaviour {
             meshObject = new GameObject("Chunk (" + chunkX + ", " + chunkY + ")");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
-            meshRenderer.material = new Material(Shader.Find("Standard"));
+            meshRenderer.material = material;
 
             meshObject.transform.position = posV3 * scale;
             meshObject.transform.parent = null;

@@ -5,6 +5,7 @@
 + [License](#license)
 + [Road Map](#road-map)
 + [Versioning](#versioning)
++ [Screenshots](#screenshots)
 
 ### Description
 World Explorer is a 3D Unity game in which the player can fly around
@@ -32,3 +33,6 @@ See [roadmap.md](roadmap.md)
 ### Versioning
 This project uses the versioning system defined by
 [Semantic Versioning v2.0.0](http://semver.org/spec/v2.0.0.html).
+
+
+### Screenshots
