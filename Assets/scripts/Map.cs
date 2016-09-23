@@ -29,7 +29,8 @@ using System.Collections;
 using System.Collections.Generic;
 using MapCollections;
 
-public class Map : MonoBehaviour {
+public class Map : MonoBehaviour 
+{
 
     private const float scale = 1f;
 

@@ -64,6 +64,8 @@ public class MapGenerator : MonoBehaviour
 
     private Map mapReference;
 
+    private PerlinTerrainGenerator ptg;
+
     void Awake()
     {
         //DrawToPlane();
@@ -122,8 +124,8 @@ public class MapGenerator : MonoBehaviour
      */
     public MapData[,] GenerateChunkedMap()
     {
-        float[,] heightMap = HeightMapReader.ReadHeightMap(chunkedMapFileName);
-
+        //float[,] heightMap = HeightMapReader.ReadHeightMap(chunkedMapFileName);
+        float[,] heightMap = ptg.GenerateMap(2410, 2410);
 
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
@@ -418,6 +420,7 @@ public class MapGenerator : MonoBehaviour
         OnValidate();
         //heightMapFileName = Application.dataPath + "/" + heightMapName;
         DrawToPlane();
+        ptg = new PerlinTerrainGenerator();
     }//End of Start
 
     /**

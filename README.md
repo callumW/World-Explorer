@@ -1,4 +1,4 @@
-# World Explorer v0.1.0 (IN DEVELOPMENT)
+# World Explorer (IN DEVELOPMENT)
 ## Contents
 + [Description](#description)
 + [Installation](#installation)
@@ -22,7 +22,7 @@ except the files in the following directories:
 + [ProjectSettings](ProjectSettings/)
 
 The files in these directories are Unity files and I don't know their
-licensing information. TODO: Rewrite this.
+licensing information.
 
 All files under the MIT license will be marked as such. See
 [License.md](License.md) for more information.
@@ -33,6 +33,5 @@ See [roadmap.md](roadmap.md)
 ### Versioning
 This project uses the versioning system defined by
 [Semantic Versioning v2.0.0](http://semver.org/spec/v2.0.0.html).
-
 
 ### Screenshots
