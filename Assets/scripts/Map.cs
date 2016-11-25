@@ -71,6 +71,7 @@ public class Map : MonoBehaviour
         }
         mapChunkDictionary.Clear();
         chunksVisibleLastUpdate.Clear();
+        map = mapGen.GenerateChunkedMap();
     }
 
 	// Use this for initialization

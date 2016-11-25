@@ -64,11 +64,18 @@ public class MapGenerator : MonoBehaviour
 
     private Map mapReference;
 
-    private PerlinTerrainGenerator ptg;
+    private TerrainGenerator ptg;
+
 
     void Awake()
     {
         //DrawToPlane();
+    }
+
+    public void RegenerateMap(int id)
+    {
+        print("Button was pushed!");
+        mapReference.Reset();
     }
 
     /**
