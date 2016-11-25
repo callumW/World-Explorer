@@ -69,6 +69,7 @@ public class Map : MonoBehaviour
             entry.Value.SetVisible(false);
             entry.Value.destroy();
         }
+
         mapChunkDictionary.Clear();
         chunksVisibleLastUpdate.Clear();
         map = mapGen.GenerateChunkedMap();
