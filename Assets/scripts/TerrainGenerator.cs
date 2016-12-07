@@ -52,14 +52,25 @@ public class PerlinTerrainGenerator : TerrainGenerator
 public class TectonicTerrainGenerator : TerrainGenerator
 {
     private Voronoi voronoiGenerator;
+    private Perlin perlinGenerator;
     private Dictionary<float, int[]> plates;
     private float[,] map;
     private int width, height;
     public TectonicTerrainGenerator ()
     {
         voronoiGenerator = new Voronoi();
-        voronoiGenerator.Seed = (int) DateTime.Now.Ticks;
+
+
+        //voronoiGenerator.Seed = (int) DateTime.Now.Ticks;
+        voronoiGenerator.Seed = 123141;
         voronoiGenerator.Frequency = 0.002;
+        //voronoiGenerator.UseDistance = true;
+
+        perlinGenerator = new Perlin();
+        perlinGenerator.Seed = voronoiGenerator.Seed;
+        perlinGenerator.Frequency = 0.006;
+        perlinGenerator.Lacunarity = 5.5;
+        perlinGenerator.Persistence = 0.15;
     }
 
     public override float [,] GenerateMap(int width, int height)
@@ -76,7 +87,8 @@ public class TectonicTerrainGenerator : TerrainGenerator
         //System.Random prng = new System.Random(124324234);
         //float xOffset = prng.Next(-100000, 100000);
         //float yOffset = prng.Next(-100000, 100000);
-
+        /*
+        ArrayList boundary_points = new ArrayList(); 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 xCoord = x;
@@ -95,19 +107,54 @@ public class TectonicTerrainGenerator : TerrainGenerator
             }
         }
 
+        voronoiGenerator.UseDistance = true;
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 //actualMap[x, y] = 0.0f;
+
                 if (isBoundaryPoint(x, y)) {
-                    actualMap[x, y] = 1.0f;
+                    boundary_points.Add(new Vector2(x, y));
+                }
+                //actualMap[x, y] = (float) (voronoiGenerator.GetValue((float) x, (float) y, 0.5)); // + perlinGenerator.GetValue( (float) x, (float) y, 0.5));
+            }
+        }
+        */
+        //Debug.Log("Number of boundary points: " + boundary_points.Count);
+
+        float h = 0.0f;
+        float scale = 0.0f;
+        float gradient_level = 0.0f;
+        float gradient_curve = 0.0f;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                
+                h = (float) perlinGenerator.GetValue((double) x, (double) y, 0.5);
+                //h = (float) voronoiGenerator.GetValue((float) x, (float) y, 0.5);
+                gradient_level = (euclidian_distance(x, y, 0, y) / 482f);
+                if (gradient_level != 0.0f)
+                    gradient_curve = 1.0f / gradient_level;
+                else
+                    gradient_curve = 1.0f;
+                scale = 1.0f * Math.Abs(gradient_level - h);
+                if (scale != 0.0f) {
+                    h += gradient_level / gradient_curve;
                 }
                 else {
-                    actualMap[x, y] = 0.0f;
+                    h += gradient_level;
                 }
+                //Debug.Log(h);
+                /*
+                foreach(Vector2 point in boundary_points) {
+                    // += (1.0f / euclidian_distance(x, y, (int) point.x, (int) point.y)) / boundary_points.Count;
+                } */
+                //h += euclidian_distance(x, y, 0, 0);
+
+                actualMap[x, y] = h;
             }
         }
 
-        Debug.Log("Number of plates: " + plates.Count);
+        //Debug.Log("Number of plates: " + plates.Count);
         return actualMap;
     }
 
@@ -134,6 +181,13 @@ public class TectonicTerrainGenerator : TerrainGenerator
         }
 
         return false;
+    }
+
+    float euclidian_distance(int x1, int y1, int x2, int y2) {
+        int distanceX = x1 - x2;
+        int distanceY = y1 - y2;
+
+        return (float) Math.Sqrt((double) (distanceX*distanceX + distanceY*distanceY));
     }
 
 }

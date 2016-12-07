@@ -133,7 +133,8 @@ public class MapGenerator : MonoBehaviour
     public MapData[,] GenerateChunkedMap()
     {
         //float[,] heightMap = HeightMapReader.ReadHeightMap(chunkedMapFileName);
-        float[,] heightMap = tectonicGenerator.GenerateMap(482, 482);
+        //float[,] heightMap = tectonicGenerator.GenerateMap(482, 482);
+        float[,] heightMap = tectonicGenerator.GenerateMap(2410, 2410);
 
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
