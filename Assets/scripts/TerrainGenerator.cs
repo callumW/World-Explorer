@@ -53,6 +53,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
 {
     private Voronoi voronoiGenerator;
     private Perlin perlinGenerator;
+    private RidgedMultifractal fractalGenerator;
     private Dictionary<float, int[]> plates;
     private float[,] map;
     private int width, height;
@@ -71,6 +72,12 @@ public class TectonicTerrainGenerator : TerrainGenerator
         perlinGenerator.Frequency = 0.006;
         perlinGenerator.Lacunarity = 5.5;
         perlinGenerator.Persistence = 0.15;
+
+        fractalGenerator = new RidgedMultifractal();
+        //fractalGenerator.Lacunarity = 2.5;
+        fractalGenerator.OctaveCount = 4;
+        fractalGenerator.Frequency = 0.01;
+
     }
 
     public override float [,] GenerateMap(int width, int height)
@@ -127,15 +134,18 @@ public class TectonicTerrainGenerator : TerrainGenerator
         float gradient_level = 0.0f;
         float gradient_curve = 0.0f;
         float perlin_value = 0.0f;
+        float fractal_value = 0.0f;
         float weight_coeff = 0.0f;
+        float base_coeff = 0.1f;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
 
+                fractal_value = get_fractal_value(x, y);
                 perlin_value = get_perlin_value(x, y);
 
                 weight_coeff = get_weight(x, y);
 
-                h = perlin_value * weight_coeff;
+                h = fractal_value * weight_coeff + perlin_value * base_coeff;
 
                 if (h < 0.0f)
                     h = 0.0f;
@@ -152,12 +162,17 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
     private float get_perlin_value(int x, int y)
     {
-        return (float) Math.Abs(perlinGenerator.GetValue((double) x, (double) y, 0.05));
+        return (float) ((perlinGenerator.GetValue((double) x, (double) y, 0.05) / 2.0 + 0.5));
+    }
+
+    private float get_fractal_value(int x, int y)
+    {
+        return (float) ((fractalGenerator.GetValue((double) x, (double) y, 0.5) / 2.0) + 0.5);
     }
 
     private float get_weight(int x, int y)
     {
-        float range = 100.0f;
+        float range = 200.0f;
         //return 1.0f;
         /*
         if (x > 10 && x < width - 10) {
@@ -182,10 +197,10 @@ public class TectonicTerrainGenerator : TerrainGenerator
         if (smallest_dist > bottom_dist)
             smallest_dist = bottom_dist;
 
-        if (smallest_dist > range)
-            return 0.1f;
+        if (smallest_dist >= range)
+            return 0.0f;
         
-        return (100.0f - smallest_dist) / 100.0f;
+        return (range - smallest_dist) / range;
     }
 
     private bool isBoundaryPoint(int x, int y)
