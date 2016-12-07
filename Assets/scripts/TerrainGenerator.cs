@@ -123,39 +123,69 @@ public class TectonicTerrainGenerator : TerrainGenerator
         //Debug.Log("Number of boundary points: " + boundary_points.Count);
 
         float h = 0.0f;
-        float scale = 0.0f;
+        float scale = 1.8f;
         float gradient_level = 0.0f;
         float gradient_curve = 0.0f;
+        float perlin_value = 0.0f;
+        float weight_coeff = 0.0f;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                
-                h = (float) perlinGenerator.GetValue((double) x, (double) y, 0.5);
-                //h = (float) voronoiGenerator.GetValue((float) x, (float) y, 0.5);
-                gradient_level = (euclidian_distance(x, y, 0, y) / 482f);
-                if (gradient_level != 0.0f)
-                    gradient_curve = 1.0f / gradient_level;
-                else
-                    gradient_curve = 1.0f;
-                scale = 1.0f * Math.Abs(gradient_level - h);
-                if (scale != 0.0f) {
-                    h += gradient_level / gradient_curve;
-                }
-                else {
-                    h += gradient_level;
-                }
-                //Debug.Log(h);
-                /*
-                foreach(Vector2 point in boundary_points) {
-                    // += (1.0f / euclidian_distance(x, y, (int) point.x, (int) point.y)) / boundary_points.Count;
-                } */
-                //h += euclidian_distance(x, y, 0, 0);
 
-                actualMap[x, y] = h;
+                perlin_value = get_perlin_value(x, y);
+
+                weight_coeff = get_weight(x, y);
+
+                h = perlin_value * weight_coeff;
+
+                if (h < 0.0f)
+                    h = 0.0f;
+                else if (h > 1.0f)
+                    h = 1.0f;
+                
+                actualMap[x, y] = h * scale;
             }
         }
 
         //Debug.Log("Number of plates: " + plates.Count);
         return actualMap;
+    }
+
+    private float get_perlin_value(int x, int y)
+    {
+        return (float) Math.Abs(perlinGenerator.GetValue((double) x, (double) y, 0.05));
+    }
+
+    private float get_weight(int x, int y)
+    {
+        float range = 100.0f;
+        //return 1.0f;
+        /*
+        if (x > 10 && x < width - 10) {
+            if (y > 10 && y < height - 10) {
+                return 0.0f;
+            }
+        }
+        */
+        if (x == 100 || y == 100 || x == width - 100 || y == height - 100)
+            return 1.0f;
+        
+        float left_dist = Math.Abs(x - 100);
+        float right_dist = Math.Abs(width - 100 - x);
+        float top_dist = Math.Abs(y - 100);
+        float bottom_dist = Math.Abs(height - 100 - y);
+        float smallest_dist = left_dist;
+
+        if (smallest_dist > right_dist)
+            smallest_dist = right_dist;
+        if (smallest_dist > top_dist)
+            smallest_dist = top_dist;
+        if (smallest_dist > bottom_dist)
+            smallest_dist = bottom_dist;
+
+        if (smallest_dist > range)
+            return 0.1f;
+        
+        return (100.0f - smallest_dist) / 100.0f;
     }
 
     private bool isBoundaryPoint(int x, int y)
