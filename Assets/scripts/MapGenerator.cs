@@ -134,23 +134,24 @@ public class MapGenerator : MonoBehaviour
     {
         //float[,] heightMap = HeightMapReader.ReadHeightMap(chunkedMapFileName);
         //float[,] heightMap = tectonicGenerator.GenerateMap(482, 482);
-        float[,] heightMap = tectonicGenerator.GenerateMap(2410, 2410);
 
-        int width = heightMap.GetLength(0);
-        int height = heightMap.GetLength(1);
+        int widthChunks = 10;
+        int heightChunks = 10;
+        int width = widthChunks * mapChunkSize;
+        int height = widthChunks * mapChunkSize;
 
-        int mapWidthChunks = width / mapChunkSize;
-        int mapHeightChunks = height / mapChunkSize;
-
-        MapData[,] maps = new MapData[mapWidthChunks, mapHeightChunks];
+        float[,] heightMap = tectonicGenerator.GenerateMap(width, height);
 
 
-        for (int chunkY = 0; chunkY < mapHeightChunks; chunkY++)
+        MapData[,] maps = new MapData[widthChunks, heightChunks];
+
+
+        for (int chunkY = 0; chunkY < heightChunks; chunkY++)
         {
             int endYIndex = (chunkY + 1) * mapChunkSize - 1;
             int startYIndex = chunkY * mapChunkSize;
 
-            for (int chunkX = 0; chunkX < mapWidthChunks; chunkX++)
+            for (int chunkX = 0; chunkX < widthChunks; chunkX++)
             {
                 int endXIndex = (chunkX + 1) * mapChunkSize - 1;
                 int startXIndex = chunkX * mapChunkSize;
@@ -159,9 +160,9 @@ public class MapGenerator : MonoBehaviour
                 float[,] chunkHeightMap = new float[mapChunkSize, mapChunkSize];
 
                 /* Fix edge values so the meshes have no seams */
-                if (chunkX != 0 && chunkX != mapWidthChunks - 1)
+                if (chunkX != 0 && chunkX != widthChunks - 1)
                 {
-                    if (chunkY != 0 && chunkY != mapHeightChunks - 1)
+                    if (chunkY != 0 && chunkY != heightChunks - 1)
                     {
                         /* fix left side of chunk */
                         for (int y = startYIndex; y <= endYIndex; y++)
@@ -428,7 +429,7 @@ public class MapGenerator : MonoBehaviour
     {
         OnValidate();
         //heightMapFileName = Application.dataPath + "/" + heightMapName;
-        DrawToPlane();
+        //DrawToPlane();
         ptg = new PerlinTerrainGenerator();
         tectonicGenerator = new TectonicTerrainGenerator();
     }//End of Start

@@ -64,15 +64,6 @@ public class Map : MonoBehaviour
 
     public void Reset()
     {
-        foreach (KeyValuePair<Vector2, MapChunk> entry in mapChunkDictionary)
-        {
-            entry.Value.SetVisible(false);
-            entry.Value.destroy();
-        }
-
-        mapChunkDictionary.Clear();
-        chunksVisibleLastUpdate.Clear();
-        map = mapGen.GenerateChunkedMap();
     }
 
 	// Use this for initialization

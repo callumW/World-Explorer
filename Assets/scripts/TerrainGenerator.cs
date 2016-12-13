@@ -30,17 +30,9 @@ public class PerlinTerrainGenerator : TerrainGenerator
     public override float [,] GenerateMap(int width, int height)
     {
         float [,] map = new float[width, height];
-        float xCoord = 0.0f;
-        float yCoord = 0.0f;
-
-        //System.Random prng = new System.Random(124324234);
-        //float xOffset = prng.Next(-100000, 100000);
-        //float yOffset = prng.Next(-100000, 100000);
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                xCoord = x;
-                yCoord = y;
                 map[x, y] = (float) perlin.GetValue((float) x, (float) y, 0.5);
             }
         }
@@ -114,7 +106,6 @@ public class TectonicTerrainGenerator : TerrainGenerator
     private Perlin perlinGenerator;
     private RidgedMultifractal fractalGenerator;
     private Dictionary<float, int[]> plates;
-    private float[,] voronoi_map;
     private int width, height;
     private List<Boundary> boundaries;
 
@@ -125,9 +116,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
         System.Random rnd = new System.Random((int) DateTime.Now.Ticks);
 
         voronoiGenerator.Seed = rnd.Next(int.MaxValue);
-        //voronoiGenerator.Seed = 123141;
         voronoiGenerator.Frequency = 0.002;
-        //voronoiGenerator.UseDistance = true;
 
         perlinGenerator = new Perlin();
         perlinGenerator.Seed = rnd.Next(int.MaxValue);
@@ -148,13 +137,11 @@ public class TectonicTerrainGenerator : TerrainGenerator
     {
         this.width = width;
         this.height = height;
-        plates = new Dictionary<float, int[]>();
 
-        float [,] actualMap = new float[width, height];
+        float [,] map = new float[width, height];
 
 
         /** find boundaries ! **/
-        voronoi_map = new float[width, height];
 
 
         boundaries.Add(new Boundary(1.0f, 0.0f, 0.0f, (float) width));
@@ -164,34 +151,6 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
         //Debug.Log("First Boundary: " + boundaries[0]);
         //Debug.Log("Second Boundary: " + boundaries[1]);
-
-        ArrayList boundary_points = new ArrayList(); 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                voronoi_map[x, y] = (float) voronoiGenerator.GetValue((float) x, (float) y, 0.5);
-
-                if (!plates.ContainsKey(voronoi_map[x, y]))
-                {
-                    int[] temp = new int[2];
-
-                    temp[0] = 1;
-                    temp[1] = 1;
-
-                    plates.Add(voronoi_map[x,y], temp);
-                }
-            }
-        }
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-
-                if (isBoundaryPoint(x, y)) {
-                    boundary_points.Add(new Vector2(x, y));
-                }
-            }
-        }
-
-        //Debug.Log("Number of boundary points: " + boundary_points.Count);
 
         float h = 0.0f;
         float scale = 1.8f;
@@ -209,11 +168,11 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
                 h = fractal_value * weight_coeff + perlin_value * base_coeff;
                 
-                actualMap[x, y] = h * scale;
+                map[x, y] = h * scale;
             }
         }
 
-        return actualMap;
+        return map;
     }
 
     private float get_perlin_value(int x, int y)
@@ -257,7 +216,6 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
             if (cur_dist < smallest_dist && boundaries[counter].is_parallel((float) x, (float) y)) {
                 smallest_dist = cur_dist;
-                //Debug.Log("I'm here!");
             }
 
             counter++;
@@ -268,38 +226,4 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
         return (range - smallest_dist) / range;
     }
-
-
-    private bool isBoundaryPoint(int x, int y)
-    {
-        for (int i = -1; i < 2; i++) {
-            for (int j=-1; j < 2; j++) {
-                
-                int neighbourX = x + i;
-                int neighbourY = y + j;
-
-                if (i == 0 && j == 0) {
-
-                }
-                else if (neighbourX < 0 || neighbourY < 0 || neighbourX >= width
-                    || neighbourY >= height) {
-                
-                }
-                else if (plates[voronoi_map[x, y]] != plates[voronoi_map[neighbourX, neighbourY]]) {
-                    return true;
-                }
-
-            }
-        }
-
-        return false;
-    }
-
-    float euclidian_distance(int x1, int y1, int x2, int y2) {
-        int distanceX = x1 - x2;
-        int distanceY = y1 - y2;
-
-        return (float) Math.Sqrt((double) (distanceX*distanceX + distanceY*distanceY));
-    }
-
 }
