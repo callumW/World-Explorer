@@ -1,6 +1,7 @@
 ﻿using MapCollections;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using LibNoise;
 using LibNoise.Generator;
@@ -49,34 +50,97 @@ public class PerlinTerrainGenerator : TerrainGenerator
 
 }
 
+public class Boundary
+{
+    private float gradient;
+    private float perpendicular_gradient;
+    private float intersect;
+    private float domain_min, domain_max;
+    private float range_min, range_max;
+
+    public Boundary(float gradient, float intersect, float min, float max)
+    {
+        this.gradient = gradient;
+        this.intersect = intersect;
+        this.domain_min = min;
+        this.domain_max = max;
+
+        if (gradient < 0) {
+            range_max = gradient * min + intersect;
+            range_min = gradient * max + intersect;
+        }
+        else {
+            range_min = gradient * min + intersect;
+            range_max = gradient * max + intersect;
+        }
+
+        perpendicular_gradient = -(1.0f / gradient);
+    }
+
+    public float distance_to(float x, float y)
+    {
+        float perp_intersect = y - (perpendicular_gradient * x);
+        float x_on_line = (perp_intersect - intersect) / (gradient - perpendicular_gradient);
+        float y_on_line = (x_on_line * gradient) + intersect;
+
+        return euclidian_distance(x_on_line, y_on_line, x, y);
+    }
+
+    public bool is_parallel(float x, float y)
+    {
+        bool x_in_range = x <= domain_max && x >= domain_min;
+        bool y_in_range = y <= range_max && y >= range_min;
+        return x_in_range && y_in_range;
+    }
+
+    float euclidian_distance(float x1, float y1, float x2, float y2) {
+        float distanceX = x1 - x2;
+        float distanceY = y1 - y2;
+
+        return (float) Math.Sqrt((double) (distanceX*distanceX + distanceY*distanceY));
+    }
+
+    public override string ToString() {
+        string mesg = "line: y = " + gradient + "x + " + intersect;
+        mesg += "\nX in " + domain_min + " - " + domain_max;
+        mesg += "\nY in " + range_min + " - " + range_max;
+        return mesg;
+    }
+}
+
 public class TectonicTerrainGenerator : TerrainGenerator
 {
     private Voronoi voronoiGenerator;
     private Perlin perlinGenerator;
     private RidgedMultifractal fractalGenerator;
     private Dictionary<float, int[]> plates;
-    private float[,] map;
+    private float[,] voronoi_map;
     private int width, height;
+    private List<Boundary> boundaries;
+
     public TectonicTerrainGenerator ()
     {
         voronoiGenerator = new Voronoi();
 
+        System.Random rnd = new System.Random((int) DateTime.Now.Ticks);
 
-        //voronoiGenerator.Seed = (int) DateTime.Now.Ticks;
-        voronoiGenerator.Seed = 123141;
+        voronoiGenerator.Seed = rnd.Next(int.MaxValue);
+        //voronoiGenerator.Seed = 123141;
         voronoiGenerator.Frequency = 0.002;
         //voronoiGenerator.UseDistance = true;
 
         perlinGenerator = new Perlin();
-        perlinGenerator.Seed = voronoiGenerator.Seed;
+        perlinGenerator.Seed = rnd.Next(int.MaxValue);
         perlinGenerator.Frequency = 0.006;
         perlinGenerator.Lacunarity = 5.5;
         perlinGenerator.Persistence = 0.15;
 
         fractalGenerator = new RidgedMultifractal();
+        fractalGenerator.Seed = rnd.Next(int.MaxValue);
         //fractalGenerator.Lacunarity = 2.5;
         fractalGenerator.OctaveCount = 4;
         fractalGenerator.Frequency = 0.01;
+        boundaries = new List<Boundary>();
 
     }
 
@@ -86,53 +150,51 @@ public class TectonicTerrainGenerator : TerrainGenerator
         this.height = height;
         plates = new Dictionary<float, int[]>();
 
-        map = new float[width, height];
         float [,] actualMap = new float[width, height];
-        float xCoord = 0.0f;
-        float yCoord = 0.0f;
 
-        //System.Random prng = new System.Random(124324234);
-        //float xOffset = prng.Next(-100000, 100000);
-        //float yOffset = prng.Next(-100000, 100000);
-        /*
+
+        /** find boundaries ! **/
+        voronoi_map = new float[width, height];
+
+
+        boundaries.Add(new Boundary(1.0f, 0.0f, 0.0f, (float) width));
+        boundaries.Add(new Boundary(-1.0f, height, 0.0f, (float) width));
+
+
+
+        //Debug.Log("First Boundary: " + boundaries[0]);
+        //Debug.Log("Second Boundary: " + boundaries[1]);
+
         ArrayList boundary_points = new ArrayList(); 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                xCoord = x;
-                yCoord = y;
-                map[x, y] = (float) voronoiGenerator.GetValue((float) x, (float) y, 0.5);
+                voronoi_map[x, y] = (float) voronoiGenerator.GetValue((float) x, (float) y, 0.5);
 
-                if (!plates.ContainsKey(map[x, y]))
+                if (!plates.ContainsKey(voronoi_map[x, y]))
                 {
                     int[] temp = new int[2];
 
                     temp[0] = 1;
                     temp[1] = 1;
 
-                    plates.Add(map[x,y], temp);
+                    plates.Add(voronoi_map[x,y], temp);
                 }
             }
         }
 
-        voronoiGenerator.UseDistance = true;
-
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                //actualMap[x, y] = 0.0f;
 
                 if (isBoundaryPoint(x, y)) {
                     boundary_points.Add(new Vector2(x, y));
                 }
-                //actualMap[x, y] = (float) (voronoiGenerator.GetValue((float) x, (float) y, 0.5)); // + perlinGenerator.GetValue( (float) x, (float) y, 0.5));
             }
         }
-        */
+
         //Debug.Log("Number of boundary points: " + boundary_points.Count);
 
         float h = 0.0f;
         float scale = 1.8f;
-        float gradient_level = 0.0f;
-        float gradient_curve = 0.0f;
         float perlin_value = 0.0f;
         float fractal_value = 0.0f;
         float weight_coeff = 0.0f;
@@ -146,17 +208,11 @@ public class TectonicTerrainGenerator : TerrainGenerator
                 weight_coeff = get_weight(x, y);
 
                 h = fractal_value * weight_coeff + perlin_value * base_coeff;
-
-                if (h < 0.0f)
-                    h = 0.0f;
-                else if (h > 1.0f)
-                    h = 1.0f;
                 
                 actualMap[x, y] = h * scale;
             }
         }
 
-        //Debug.Log("Number of plates: " + plates.Count);
         return actualMap;
     }
 
@@ -173,35 +229,46 @@ public class TectonicTerrainGenerator : TerrainGenerator
     private float get_weight(int x, int y)
     {
         float range = 200.0f;
-        //return 1.0f;
-        /*
-        if (x > 10 && x < width - 10) {
-            if (y > 10 && y < height - 10) {
-                return 0.0f;
+
+        int length = boundaries.Count;
+        int counter = 0;
+        float smallest_dist = -1.0f;
+        do {
+            
+            if (boundaries[counter].is_parallel((float) x, (float) y)) {
+                smallest_dist = boundaries[counter].distance_to((float) x, (float) y);
+                break;
             }
+            counter++;
         }
-        */
-        if (x == 100 || y == 100 || x == width - 100 || y == height - 100)
-            return 1.0f;
-        
-        float left_dist = Math.Abs(x - 100);
-        float right_dist = Math.Abs(width - 100 - x);
-        float top_dist = Math.Abs(y - 100);
-        float bottom_dist = Math.Abs(height - 100 - y);
-        float smallest_dist = left_dist;
+        while (counter < length);
 
-        if (smallest_dist > right_dist)
-            smallest_dist = right_dist;
-        if (smallest_dist > top_dist)
-            smallest_dist = top_dist;
-        if (smallest_dist > bottom_dist)
-            smallest_dist = bottom_dist;
-
-        if (smallest_dist >= range)
+        if (smallest_dist == -1.0f)
             return 0.0f;
+
+        float cur_dist;
+        counter++;
+
+        if (x > width - 4)
+            x = x;
         
+        while (counter < length) {
+            cur_dist = boundaries[counter].distance_to((float) x, (float) y);
+
+            if (cur_dist < smallest_dist && boundaries[counter].is_parallel((float) x, (float) y)) {
+                smallest_dist = cur_dist;
+                //Debug.Log("I'm here!");
+            }
+
+            counter++;
+        }
+
+        if (smallest_dist > range)
+            return 0.0f;
+
         return (range - smallest_dist) / range;
     }
+
 
     private bool isBoundaryPoint(int x, int y)
     {
@@ -218,7 +285,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
                     || neighbourY >= height) {
                 
                 }
-                else if (plates[map[x, y]] != plates[map[neighbourX, neighbourY]]) {
+                else if (plates[voronoi_map[x, y]] != plates[voronoi_map[neighbourX, neighbourY]]) {
                     return true;
                 }
 
