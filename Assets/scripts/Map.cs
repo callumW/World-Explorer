@@ -89,6 +89,10 @@ public class Map : MonoBehaviour
         UpdateVisibleChunks();
 	}
 
+    /**
+     * Calculate what chunks should be visible on the screen
+     *
+     */
     void UpdateVisibleChunks()
     {
         for (int i = 0; i < chunksVisibleLastUpdate.Count; i++)
@@ -116,7 +120,7 @@ public class Map : MonoBehaviour
                     {
                         mapChunkDictionary[viewedChunkCoord].UpdateMapChunk();
                     }
-                    else
+                    else // If the chunk has not been created, create it!
                     {
                         mapChunkDictionary.Add(viewedChunkCoord,
                             new MapChunk(viewedChunkCoord, chunkSize, lods, 
@@ -124,6 +128,7 @@ public class Map : MonoBehaviour
                     }
                 }
             }
+            print("Chunked Map disabled");
         }
         else
         {
@@ -148,6 +153,7 @@ public class Map : MonoBehaviour
                     }
                 }
             }
+            print("Chunked Map enabled");
         }
     }
 
@@ -211,7 +217,9 @@ public class Map : MonoBehaviour
                 lodMeshes[i] = new LODMesh(lods[i].lod, UpdateMapChunk);
             }
 
+            //Request the map data for this position, when the data is generated, call OnMapDataReceived function.
             mapGen.requestMapData(position, OnMapDataReceived);
+            print("threading!");
         }
 
         public MapChunk(Vector2 pos, int size, int chunkX, int chunkY, LODData[] lods, Transform parent,
@@ -242,6 +250,7 @@ public class Map : MonoBehaviour
             }
 
             OnMapDataReceived(md);
+            print("no threading");
         }
 
         void OnMapDataReceived(MapData md)
@@ -265,6 +274,7 @@ public class Map : MonoBehaviour
 
                 if (visible)
                 {
+                    /** Calculate what LOD we should use **/
                     int lodIndex = 0;
                     for (int i = 0; i < lods.Length; i++)
                     {
@@ -279,13 +289,14 @@ public class Map : MonoBehaviour
                     }
                     if (lodIndex != prevLodIndex)
                     {
+                        /** Check if the mesh has already been calculated **/
                         LODMesh lodMesh = lodMeshes[lodIndex];
                         if (lodMesh.hasMesh)
                         {
                             prevLodIndex = lodIndex;
                             meshFilter.mesh = lodMesh.mesh;
                         }
-                        else if (!lodMesh.hasRequestedMesh)
+                        else if (!lodMesh.hasRequestedMesh) //If mesh has not been calculated
                         {
                             lodMesh.requestMesh(mapData);
                         }
@@ -343,7 +354,7 @@ public class Map : MonoBehaviour
         public void requestMesh(MapData mapData)
         {
             hasRequestedMesh = true;
-            mapGen.requestMeshData(mapData, OnMeshReceived, lod);
+            mapGen.requestMeshData(mapData, OnMeshReceived, lod);   //Request the mesh, when the mesh has been generated call OnMeshReceived.
         }
     }
 }

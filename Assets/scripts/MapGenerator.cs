@@ -67,6 +67,8 @@ public class MapGenerator : MonoBehaviour
     private TerrainGenerator ptg;
     private TectonicTerrainGenerator tectonicGenerator;
 
+    private MapData[,] mapChunks;
+
 
     void Awake()
     {
@@ -75,8 +77,6 @@ public class MapGenerator : MonoBehaviour
 
     public void RegenerateMap(int id)
     {
-        print("Button was pushed!");
-        mapReference.Reset();
     }
 
     /**
@@ -143,7 +143,7 @@ public class MapGenerator : MonoBehaviour
         float[,] heightMap = tectonicGenerator.GenerateMap(width, height);
 
 
-        MapData[,] maps = new MapData[widthChunks, heightChunks];
+        mapChunks = new MapData[widthChunks, heightChunks];
 
 
         for (int chunkY = 0; chunkY < heightChunks; chunkY++)
@@ -295,10 +295,11 @@ public class MapGenerator : MonoBehaviour
                     }
                     localY++;
                 }
-                maps[chunkX, chunkY] = new MapData(chunkHeightMap, colMap);
+                mapChunks[chunkX, chunkY] = new MapData(chunkHeightMap, colMap);
             }
         }
-        return maps;
+        print("Returning Data");
+        return mapChunks;
     }
 
     public MapData GenerateMapData(Vector2 center)
@@ -308,8 +309,10 @@ public class MapGenerator : MonoBehaviour
 
     public MapData GenerateMapData(Vector2 center, int chunkX, int chunkY)
     {
-        return GenerateChunkedMap()[chunkX, chunkY];
+        print("Requesting Map Data");
+        return mapChunks[chunkX, chunkY];
     }
+
 
     public void requestMapData(Vector2 center, Action<MapData> callback)
     {
@@ -347,6 +350,9 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    /**
+     * Calculate a mesh on another thread
+     */
     public void requestMeshData(MapData mapData, Action<MeshData> callback, int lod)
     {
         ThreadStart threadStart = delegate {
@@ -432,6 +438,7 @@ public class MapGenerator : MonoBehaviour
         //DrawToPlane();
         ptg = new PerlinTerrainGenerator();
         tectonicGenerator = new TectonicTerrainGenerator();
+        //GenerateChunkedMap();
     }//End of Start
 
     /**
