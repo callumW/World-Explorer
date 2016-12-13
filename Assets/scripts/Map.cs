@@ -81,6 +81,8 @@ public class Map : MonoBehaviour
         map = mapGen.GenerateChunkedMap();
         chunkedMapWidth = map.GetLength(0);
         chunkedMapHeight = map.GetLength(1);
+
+        //Used so that 0, 0, 0 is in the center of the map
         chunkedMapStart = new Vector2(0f - chunkedMapWidth / 2f,
             chunkedMapHeight / 2f);
             
@@ -101,59 +103,26 @@ public class Map : MonoBehaviour
         }
         chunksVisibleLastUpdate.Clear();
 
-
-        if (!chunkedMap)
+        for (int y = 0; y < chunkedMapHeight; y++)
         {
-            int currentChunkCoordX = Mathf.RoundToInt(cameraPosition.x / chunkSize);
-            int currentChunkCoordY = Mathf.RoundToInt(cameraPosition.y / chunkSize);
-
-            for (int yOffset = -chunksVisibleInViewDst;
-                yOffset <= chunksVisibleInViewDst; yOffset++)
+            float mapY = chunkedMapStart.y - y;
+            for (int x = 0; x < chunkedMapWidth; x++)
             {
-                for (int xOffset = -chunksVisibleInViewDst;
-                    xOffset <= chunksVisibleInViewDst; xOffset++)
+                float mapX = chunkedMapStart.x + x;
+
+                Vector2 mapChunkPos = new Vector2(mapX, mapY);
+
+                if (mapChunkDictionary.ContainsKey(mapChunkPos))
                 {
-                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX +
-                                                   xOffset, currentChunkCoordY + yOffset);
-                
-                    if (mapChunkDictionary.ContainsKey(viewedChunkCoord))
-                    {
-                        mapChunkDictionary[viewedChunkCoord].UpdateMapChunk();
-                    }
-                    else // If the chunk has not been created, create it!
-                    {
-                        mapChunkDictionary.Add(viewedChunkCoord,
-                            new MapChunk(viewedChunkCoord, chunkSize, lods, 
-                                transform, mapMaterial));
-                    }
+                    mapChunkDictionary[mapChunkPos].UpdateMapChunk();
+                }
+                else
+                {
+                    mapChunkDictionary.Add(mapChunkPos,
+                        new MapChunk(mapChunkPos, chunkSize, x, y, lods, 
+                            transform, mapMaterial, map[x, y]));
                 }
             }
-            print("Chunked Map disabled");
-        }
-        else
-        {
-            for (int y = 0; y < chunkedMapHeight; y++)
-            {
-                float mapY = chunkedMapStart.y - y;
-                for (int x = 0; x < chunkedMapWidth; x++)
-                {
-                    float mapX = chunkedMapStart.x + x;
-
-                    Vector2 mapChunkPos = new Vector2(mapX, mapY);
-
-                    if (mapChunkDictionary.ContainsKey(mapChunkPos))
-                    {
-                        mapChunkDictionary[mapChunkPos].UpdateMapChunk();
-                    }
-                    else
-                    {
-                        mapChunkDictionary.Add(mapChunkPos,
-                            new MapChunk(mapChunkPos, chunkSize, x, y, lods, 
-                                transform, mapMaterial, map[x, y]));
-                    }
-                }
-            }
-            print("Chunked Map enabled");
         }
     }
 
@@ -164,6 +133,8 @@ public class Map : MonoBehaviour
         /* Update posistion variables */
         cameraPosition.x = transform.position.x;
         cameraPosition.y = transform.position.z;
+
+        /** Only Update if the camera has moved by set amount **/
         if ((cameraPositionOld - cameraPosition).sqrMagnitude > sqrMoveDelay)
         {
             cameraPositionOld = cameraPosition;
@@ -188,39 +159,39 @@ public class Map : MonoBehaviour
 
         int prevLodIndex = -1;
 
-        public MapChunk(Vector2 pos, int size, LODData[] lods, Transform parent,
-            Material material)
-        {
-            this.lods = lods;
-            position = pos * size;
-            bounds = new Bounds(position, Vector2.one * size);
-            Vector3 posV3 = new Vector3(position.x, 0, position.y);
-
-            meshObject = new GameObject("Map Chunk");
-            meshRenderer = meshObject.AddComponent<MeshRenderer>();
-            meshFilter = meshObject.AddComponent<MeshFilter>();
-            meshRenderer.material = material;
-
-            /* set the location, scale and rotation of the map chunk */
-            meshObject.transform.position = posV3 * scale;
-            meshObject.transform.parent = null;
-            meshObject.transform.localScale = Vector3.one * scale;
-            meshObject.transform.rotation = Quaternion.identity;
-            meshObject.transform.localRotation = Quaternion.identity;
-
-            SetVisible(false);
-
-            /* Populate the meshes for this chunk */
-            lodMeshes = new LODMesh[this.lods.Length];
-            for (int i = 0; i < lodMeshes.Length; i++)
-            {
-                lodMeshes[i] = new LODMesh(lods[i].lod, UpdateMapChunk);
-            }
-
-            //Request the map data for this position, when the data is generated, call OnMapDataReceived function.
-            mapGen.requestMapData(position, OnMapDataReceived);
-            print("threading!");
-        }
+//        public MapChunk(Vector2 pos, int size, LODData[] lods, Transform parent,
+//            Material material)
+//        {
+//            this.lods = lods;
+//            position = pos * size;
+//            bounds = new Bounds(position, Vector2.one * size);
+//            Vector3 posV3 = new Vector3(position.x, 0, position.y);
+//
+//            meshObject = new GameObject("Map Chunk");
+//            meshRenderer = meshObject.AddComponent<MeshRenderer>();
+//            meshFilter = meshObject.AddComponent<MeshFilter>();
+//            meshRenderer.material = material;
+//
+//            /* set the location, scale and rotation of the map chunk */
+//            meshObject.transform.position = posV3 * scale;
+//            meshObject.transform.parent = null;
+//            meshObject.transform.localScale = Vector3.one * scale;
+//            meshObject.transform.rotation = Quaternion.identity;
+//            meshObject.transform.localRotation = Quaternion.identity;
+//
+//            SetVisible(false);
+//
+//            /* Populate the meshes for this chunk */
+//            lodMeshes = new LODMesh[this.lods.Length];
+//            for (int i = 0; i < lodMeshes.Length; i++)
+//            {
+//                lodMeshes[i] = new LODMesh(lods[i].lod, UpdateMapChunk);
+//            }
+//
+//            //Request the map data for this position, when the data is generated, call OnMapDataReceived function.
+//            mapGen.requestMapData(position, OnMapDataReceived);
+//            print("threading!");
+//        }
 
         public MapChunk(Vector2 pos, int size, int chunkX, int chunkY, LODData[] lods, Transform parent,
             Material material, MapData md)
@@ -250,7 +221,6 @@ public class Map : MonoBehaviour
             }
 
             OnMapDataReceived(md);
-            print("no threading");
         }
 
         void OnMapDataReceived(MapData md)

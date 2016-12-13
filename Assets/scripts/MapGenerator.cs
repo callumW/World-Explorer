@@ -302,53 +302,58 @@ public class MapGenerator : MonoBehaviour
         return mapChunks;
     }
 
-    public MapData GenerateMapData(Vector2 center)
-    {
-        return GenerateMap();
-    }
-
-    public MapData GenerateMapData(Vector2 center, int chunkX, int chunkY)
-    {
-        print("Requesting Map Data");
-        return mapChunks[chunkX, chunkY];
-    }
-
-
-    public void requestMapData(Vector2 center, Action<MapData> callback)
-    {
-        ThreadStart threadStart = delegate {
-            MapDataThread(center, callback);
-        };
-
-        new Thread(threadStart).Start();
-    }
-
-    public void requestMapData(Vector2 center, int chunkX, int chunkY, Action<MapData> callback)
-    {
-        ThreadStart threadStart = delegate {
-            MapDataThread(center, chunkX, chunkY, callback);
-        };
-
-        new Thread(threadStart).Start();
-    }
-
-    void MapDataThread(Vector2 center, Action<MapData> callback)
-    {
-        MapData mapData = GenerateMapData(center);
-        lock (mapDataThreadInfoQueue) {
-            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, 
-                mapData));
-        }
-    }
-
-    void MapDataThread(Vector2 center, int chunkX, int chunkY, Action<MapData> callback)
-    {
-        MapData mapData = GenerateMapData(center, chunkX, chunkY);
-        lock (mapDataThreadInfoQueue) {
-            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, 
-                mapData));
-        }
-    }
+//    public MapData GenerateMapData(Vector2 center)
+//    {
+//        return GenerateMap();
+//    }
+//
+//    /**
+//     * Depricated
+//     */
+//    public MapData GenerateMapData(Vector2 center, int chunkX, int chunkY)
+//    {
+//        print("Requesting Map Data");
+//        return mapChunks[chunkX, chunkY];
+//    }
+//
+//    /**
+//     * Depricated
+//     */
+//    public void requestMapData(Vector2 center, Action<MapData> callback)
+//    {
+//        ThreadStart threadStart = delegate {
+//            MapDataThread(center, callback);
+//        };
+//
+//        new Thread(threadStart).Start();
+//    }
+//
+//    public void requestMapData(Vector2 center, int chunkX, int chunkY, Action<MapData> callback)
+//    {
+//        ThreadStart threadStart = delegate {
+//            MapDataThread(center, chunkX, chunkY, callback);
+//        };
+//
+//        new Thread(threadStart).Start();
+//    }
+//
+//    void MapDataThread(Vector2 center, Action<MapData> callback)
+//    {
+//        MapData mapData = GenerateMapData(center);
+//        lock (mapDataThreadInfoQueue) {
+//            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, 
+//                mapData));
+//        }
+//    }
+//
+//    void MapDataThread(Vector2 center, int chunkX, int chunkY, Action<MapData> callback)
+//    {
+//        MapData mapData = GenerateMapData(center, chunkX, chunkY);
+//        lock (mapDataThreadInfoQueue) {
+//            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, 
+//                mapData));
+//        }
+//    }
 
     /**
      * Calculate a mesh on another thread

@@ -6,7 +6,6 @@ using UnityEngine;
 using LibNoise;
 using LibNoise.Generator;
 using LibNoise.Operator;
-using System;
 
 public abstract class TerrainGenerator 
 {
@@ -66,6 +65,7 @@ public class Boundary
             range_max = gradient * max + intersect;
         }
 
+
         perpendicular_gradient = -(1.0f / gradient);
     }
 
@@ -80,8 +80,17 @@ public class Boundary
 
     public bool is_parallel(float x, float y)
     {
+        
         bool x_in_range = x <= domain_max && x >= domain_min;
-        bool y_in_range = y <= range_max && y >= range_min;
+
+        bool y_in_range;
+        if (range_max == range_min) {
+            y_in_range = true;
+        }
+        else {
+            y_in_range = y <= range_max && y >= range_min;
+        }
+
         return x_in_range && y_in_range;
     }
 
@@ -100,12 +109,13 @@ public class Boundary
     }
 }
 
+
 public class TectonicTerrainGenerator : TerrainGenerator
 {
     private Voronoi voronoiGenerator;
     private Perlin perlinGenerator;
     private RidgedMultifractal fractalGenerator;
-    private Dictionary<float, int[]> plates;
+
     private int width, height;
     private List<Boundary> boundaries;
 
@@ -145,6 +155,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
 
         boundaries.Add(new Boundary(1.0f, 0.0f, 0.0f, (float) width));
+
         boundaries.Add(new Boundary(-1.0f, height, 0.0f, (float) width));
 
 
@@ -207,9 +218,6 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
         float cur_dist;
         counter++;
-
-        if (x > width - 4)
-            x = x;
         
         while (counter < length) {
             cur_dist = boundaries[counter].distance_to((float) x, (float) y);
