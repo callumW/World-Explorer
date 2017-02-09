@@ -41,6 +41,105 @@ public class PerlinTerrainGenerator : TerrainGenerator
 
 }
 
+public abstract class Line
+{
+    public abstract float get_distance(float x, float y);
+}
+
+public class VerticalLine : Line
+{
+    private float x_value;
+    private float minY, maxY;
+    public VerticalLine(float x, float minY, float maxY)
+    {
+        x_value = x;
+        this.minY = minY;
+        this.maxY = maxY;
+    }
+
+    
+    public override float get_distance(float x, float y)
+    {
+        if (x >= minY && x <= maxY)
+            return Math.Abs(x - x_value);
+        else
+            return -1.0f;
+    }
+}
+
+public class HorizontalLine : Line
+{
+    private float y_value;
+    private float minX, maxX;
+
+    public HorizontalLine(float y, float minX, float maxX )
+    {
+        y_value = y;
+        this.minX = minX;
+        this.maxX = maxX;
+    }
+
+    public override float get_distance(float x, float y)
+    {
+        if (x >= minX && x <= maxX)
+            return Math.Abs(y - y_value);
+        else
+            return -1.0f;
+    }
+}
+
+public class LinearLine : Line
+{
+    private float intersect;
+    private float gradient;
+    private float minX, maxX;
+    private float minY, maxY;
+
+    private float perpendicular;
+    private float minRangeIntersect;
+    private float maxRangeIntersect;
+
+    public LinearLine(float minX, float minY,
+        float maxX, float maxY)
+    {
+        // Need to calculate the perpendicular gradient, the minimum range line
+        // and the maximum range line
+
+        gradient = (maxY - minY) / (maxX - minX);
+        intersect = maxY - gradient * maxX;
+        this.minX = minX;
+        this.maxX = maxX;
+        this.minY = minY;
+        this.maxY = maxY;
+
+        perpendicular = -1.0f / gradient;
+
+        minRangeIntersect = minY - perpendicular * minX;
+        maxRangeIntersect = maxY - perpendicular * maxX;
+    }
+
+    public override float get_distance(float x, float y)
+    {
+        // First we need to check we are within the domain of the line
+        // Then we need to calculate the point on the line which is closest
+        // to the point given.
+        // Finally we calculate the euclidian distance between those two points
+
+        if ( y >= minRangeIntersect + perpendicular * x) {
+            if ( y <= maxRangeIntersect + perpendicular * x) {
+                float perpendicularIntersect = y - perpendicular * x;
+                float closestX = (perpendicularIntersect - intersect) / (gradient - perpendicular);
+                float closestY = perpendicularIntersect + perpendicular * closestX;
+
+                return (float) Math.Sqrt((closestX - x) * (closestX - x) + (closestY - y) * (closestY -y));
+            }
+        }
+
+        return -1.0f;
+    }
+
+}
+
 public class Boundary
 {
     private float gradient;
@@ -114,10 +213,13 @@ public class TectonicTerrainGenerator : TerrainGenerator
 {
     private Voronoi voronoiGenerator;
     private Perlin perlinGenerator;
+    private Perlin baseGroundGenerator;
     private RidgedMultifractal fractalGenerator;
 
     private int width, height;
-    private List<Boundary> boundaries;
+    private List<Line> boundaries;
+
+    private TectonicFault faultLine;
 
     public TectonicTerrainGenerator ()
     {
@@ -134,12 +236,17 @@ public class TectonicTerrainGenerator : TerrainGenerator
         perlinGenerator.Lacunarity = 5.5;
         perlinGenerator.Persistence = 0.15;
 
+        baseGroundGenerator = new Perlin();
+        baseGroundGenerator.Seed = rnd.Next(int.MaxValue);
+        baseGroundGenerator.Frequency = 0.001;
+        baseGroundGenerator.Persistence = 0.05;
+
         fractalGenerator = new RidgedMultifractal();
         fractalGenerator.Seed = rnd.Next(int.MaxValue);
         //fractalGenerator.Lacunarity = 2.5;
         fractalGenerator.OctaveCount = 4;
         fractalGenerator.Frequency = 0.01;
-        boundaries = new List<Boundary>();
+        boundaries = new List<Line>();
 
     }
 
@@ -150,14 +257,19 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
         float [,] map = new float[width, height];
 
+        faultLine = new TectonicFault(width, height);
+
 
         /** find boundaries ! **/
 
+        /*
+        boundaries.Add(new LinearLine(0.0f, 0.0f, (float) width, (float) height));
 
-        boundaries.Add(new Boundary(1.0f, 0.0f, 0.0f, (float) width));
+        boundaries.Add(new LinearLine((float) width, 0.0f, 0.0f, (float) height));
 
-        boundaries.Add(new Boundary(-1.0f, height, 0.0f, (float) width));
-
+        boundaries.Add(new HorizontalLine(height / 2.0f, 0.0f, (float) width));
+        boundaries.Add(new VerticalLine(width / 2.0f, 0.0f, (float) height));
+        */
 
 
         //Debug.Log("First Boundary: " + boundaries[0]);
@@ -166,18 +278,20 @@ public class TectonicTerrainGenerator : TerrainGenerator
         float h = 0.0f;
         float scale = 1.8f;
         float perlin_value = 0.0f;
+        float base_value = 0.0f;
         float fractal_value = 0.0f;
         float weight_coeff = 0.0f;
-        float base_coeff = 0.1f;
+        float base_coeff = 0.9f;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
 
                 fractal_value = get_fractal_value(x, y);
                 perlin_value = get_perlin_value(x, y);
+                base_value = get_base_perlin_value(x, y);
 
                 weight_coeff = get_weight(x, y);
 
-                h = fractal_value * weight_coeff + perlin_value * base_coeff;
+                h = fractal_value * weight_coeff + perlin_value * base_coeff + base_value;
                 
                 map[x, y] = h * scale;
             }
@@ -191,6 +305,11 @@ public class TectonicTerrainGenerator : TerrainGenerator
         return (float) ((perlinGenerator.GetValue((double) x, (double) y, 0.05) / 2.0 + 0.5));
     }
 
+    private float get_base_perlin_value(int x, int y)
+    {
+        return (float) ((baseGroundGenerator.GetValue((double) x, (double) y, 0.05) / 2.0 + 0.5));
+    }
+
     private float get_fractal_value(int x, int y)
     {
         return (float) ((fractalGenerator.GetValue((double) x, (double) y, 0.5) / 2.0) + 0.5);
@@ -200,13 +319,13 @@ public class TectonicTerrainGenerator : TerrainGenerator
     {
         float range = 200.0f;
 
-        int length = boundaries.Count;
+        int length = faultLine.length();
         int counter = 0;
         float smallest_dist = -1.0f;
         do {
             
-            if (boundaries[counter].is_parallel((float) x, (float) y)) {
-                smallest_dist = boundaries[counter].distance_to((float) x, (float) y);
+            if (faultLine.get(counter).get_distance((float) x, (float) y) != -1.0f) {
+                smallest_dist = faultLine.get(counter).get_distance((float) x, (float) y);
                 break;
             }
             counter++;
@@ -220,9 +339,9 @@ public class TectonicTerrainGenerator : TerrainGenerator
         counter++;
         
         while (counter < length) {
-            cur_dist = boundaries[counter].distance_to((float) x, (float) y);
+            cur_dist = faultLine.get(counter).get_distance((float) x, (float) y);
 
-            if (cur_dist < smallest_dist && boundaries[counter].is_parallel((float) x, (float) y)) {
+            if (cur_dist < smallest_dist && cur_dist != -1) {
                 smallest_dist = cur_dist;
             }
 
@@ -234,4 +353,82 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
         return (range - smallest_dist) / range;
     }
+}
+
+public class TectonicFault 
+{
+    private List<Line> lines;
+    //Type of boundary?
+    //range?
+
+    private System.Random rndGenerator;
+
+    public TectonicFault(int width, int height)
+    {
+        lines = new List<Line>();
+        rndGenerator = new System.Random((int) DateTime.Now.Millisecond);
+        int length = 100;
+
+        int baseAngle = getAngle(45, 135);
+        int minAngle = baseAngle - 45;
+        int maxAngle = baseAngle + 45;
+        int currentAngle;
+
+        int startX = 60;
+        int startY = 0;
+        int endX, endY;
+
+        bool end = false;
+        while (!end) {
+            currentAngle = getAngle(minAngle, maxAngle);
+
+            endX = (int) (startX + length * System.Math.Sin(currentAngle * (System.Math.PI / 180)));
+
+            endY = (int) (startY + length * System.Math.Cos(currentAngle * (System.Math.PI / 180)));
+
+            if (endX < 0) {
+                endX = 0;
+                end = true;
+            }
+            else if (endX > width) {
+                endX = width;
+                end = true;
+            }
+
+            if (endY < 0) {
+                endY = 0;
+                end = true;
+            }
+            else if (endY > height) {
+                endY = height;
+                end = true;
+            }
+
+            float gradient = (endY - startY) / (endX - startX);
+
+            if (gradient < 0.1f && gradient > -0.1f)
+                lines.Add(new HorizontalLine(startY, startX, endX));
+            else if (gradient > 0.9f && gradient < -0.9f)
+                lines.Add(new VerticalLine(startX, startY, endY));
+            else
+                lines.Add(new LinearLine(startX, startY, endX, endY));
+
+            startX = endX;
+            startY = endY;
+        }
+    }
+
+    private int getAngle(int min, int max)
+    {
+        return rndGenerator.Next(min, max);
+    }
+
+    public Line get(int i) {
+        return lines[i];
+    }
+
+    public int length() {
+        return lines.Count;
+    }
+
 }

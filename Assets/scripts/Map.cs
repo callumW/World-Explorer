@@ -89,6 +89,7 @@ public class Map : MonoBehaviour
         Debug.Log("chunked map info:\nWidth: " + chunkedMapWidth + "\nHeight: "
             + chunkedMapHeight + "\nStart pos: " + chunkedMapStart);
         UpdateVisibleChunks();
+       
 	}
 
     /**
