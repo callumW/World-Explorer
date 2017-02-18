@@ -28,17 +28,17 @@
 		//Called for every pixel
 		void surf (Input IN, inout SurfaceOutputStandard o) {
 
-			if ( IN.worldPos.y < 0.2f * 180.0f * 1.8f) {
+			if ( IN.worldPos.y < 0.2f * 1.8f * 3.0f * 60.0f) {
 				o.Albedo = float3(0.055f, 0.094f, 0.631f);
 			}
-			else if (IN.worldPos.y < 0.25f * 180.0f * 1.8f) {
+			else if (IN.worldPos.y < 0.25f * 1.8f * 3.0f * 60.0f) {
 				o.Albedo = float3(0.808f, 0.839f, 0.522f);
 			}
-			else if (IN.worldPos.y < 65.0f * 1.8f) {
+			else if (IN.worldPos.y < 0.65 * 1.8f * 3.0f * 60.0f) {
 				o.Albedo = float3(0.0f, 0.478f, 0.039f); 
 			}
 			else {
-				float heightPercent = inverseLerp(50.0f, 180.0f, IN.worldPos.y);
+				float heightPercent = inverseLerp(0.75f * 3.0f * 60.0f, 1.8f * 3.0f * 60.0f, IN.worldPos.y);
 				o.Albedo = heightPercent;
 			}
 		}

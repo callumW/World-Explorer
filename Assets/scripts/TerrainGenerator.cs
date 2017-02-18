@@ -369,12 +369,13 @@ public class TectonicFault
         rndGenerator = new System.Random((int) DateTime.Now.Millisecond);
         int length = 100;
 
-        int baseAngle = getAngle(45, 135);
+        //int baseAngle = getAngle(45, 135);
+        int baseAngle = 0;
         int minAngle = baseAngle - 45;
         int maxAngle = baseAngle + 45;
         int currentAngle;
 
-        int startX = 60;
+        int startX = 1105;
         int startY = 0;
         int endX, endY;
 
