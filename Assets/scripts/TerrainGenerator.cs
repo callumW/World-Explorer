@@ -422,7 +422,12 @@ public class TectonicFault
                 end = true;
             }
 
-            float gradient = (endY - startY) / (endX - startX);
+            Debug.Assert(endX != startX);
+            Debug.Assert(endY != startY);
+
+            float gradient = 0.0f;
+            if (endX != startX)
+                gradient = (endY - startY) / (endX - startX);
 
             if (gradient < 0.1f && gradient > -0.1f)
                 lines.Add(new HorizontalLine(startY, startX, endX));
