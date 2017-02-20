@@ -125,6 +125,8 @@ public class LinearLine : Line
         // to the point given.
         // Finally we calculate the euclidian distance between those two points
 
+        
+
         if ( y >= minRangeIntersect + perpendicular * x) {
             if ( y <= maxRangeIntersect + perpendicular * x) {
                 float perpendicularIntersect = y - perpendicular * x;
@@ -133,9 +135,24 @@ public class LinearLine : Line
 
                 return (float) Math.Sqrt((closestX - x) * (closestX - x) + (closestY - y) * (closestY -y));
             }
+            else
+            {
+                //we are above the maxrange line therefore maxX, maxY is the
+                //closest point
+
+                return (float)Math.Sqrt((x - maxX) * (x - maxX) + (y - maxY) * (y - maxY));
+            }
+        }
+        else
+        {
+            //we are below the minimum bounding line therefore minX, minY is
+            // the closest point.
+
+            return (float) Math.Sqrt((x - minX) * (x - minX) + (y - minY) * (y - minY));
         }
 
         return -1.0f;
+
     }
 
 }
