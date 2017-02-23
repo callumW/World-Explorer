@@ -391,14 +391,14 @@ public class TectonicFault
     {
         lines = new List<Line>();
         rndGenerator = new System.Random(seed);
-        int length = 100;
+        int length = 500;
 
 		int baseAngle = 0;
 
 		if (startX == 0) {
-			baseAngle = 270;
-		} else if (startX == width) {
 			baseAngle = 90;
+		} else if (startX == width) {
+			baseAngle = 270;
 		} else if (startY == 0) {
 			baseAngle = 0;
 		} else if (startY == height) {
@@ -439,6 +439,11 @@ public class TectonicFault
 
             Debug.Assert(endX != startX);
             Debug.Assert(endY != startY);
+
+			if (endX == startX || endY == startY) {
+				Debug.Log ("X: " + startX + " Y: " + startY);
+				Debug.Log ("base angle: " + baseAngle + " Current angle: " + currentAngle);
+			}
 
             float gradient = 0.0f;
             if (endX != startX)
