@@ -490,7 +490,7 @@ public class Lithosphere
 		numberOfFaults = rndGenerator.Next (3) + 1;
 
 		Debug.Log ("Generating " + numberOfFaults + " Faults.");
-
+		/*
 		int side = 0;
 		int startX = 0;
 		int startY = 0;
@@ -524,6 +524,9 @@ public class Lithosphere
 			faults.Add(new TectonicFault(width, height, startX, startY, seed));
 
 		}
+		*/
+		faults.Add(new TectonicFault(width, height, 1000, 0, seed));
+		faults.Add(new TectonicFault(width, height, 0, 1000, seed));
 	}
 
 	public int getNumberOfFaults() {
