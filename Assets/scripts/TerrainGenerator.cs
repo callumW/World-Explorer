@@ -364,7 +364,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
 			while (counter < length) {
 				cur_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
 
-				if (cur_dist < smallest_dist && cur_dist != -1) {
+				if (cur_dist < smallest_dist && cur_dist != - 1) {
 					smallest_dist = cur_dist;
 				}
 
@@ -391,7 +391,7 @@ public class TectonicFault
     {
         lines = new List<Line>();
         rndGenerator = new System.Random(seed);
-        int length = 500;
+        int length = 100;
 
 		int baseAngle = 0;
 
@@ -527,6 +527,7 @@ public class Lithosphere
 		*/
 		faults.Add(new TectonicFault(width, height, 1000, 0, seed));
 		faults.Add(new TectonicFault(width, height, 0, 1000, seed));
+		numberOfFaults = 2;
 	}
 
 	public int getNumberOfFaults() {
