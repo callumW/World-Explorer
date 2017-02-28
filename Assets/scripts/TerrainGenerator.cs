@@ -232,18 +232,18 @@ public class TectonicTerrainGenerator : TerrainGenerator
     private Perlin perlinGenerator;
     private Perlin baseGroundGenerator;
     private RidgedMultifractal fractalGenerator;
-	private int seed;
+    private int seed;
 
     private int width, height;
     private List<Line> boundaries;
 
     //private TectonicFault faultLine;
-	private Lithosphere lithosphere;
+    private Lithosphere lithosphere;
 
     public TectonicTerrainGenerator ()
     {
         voronoiGenerator = new Voronoi();
-		seed = (int)DateTime.Now.Ticks;
+        seed = (int)DateTime.Now.Ticks;
         System.Random rnd = new System.Random(seed);
 
         voronoiGenerator.Seed = rnd.Next(int.MaxValue);
@@ -271,15 +271,15 @@ public class TectonicTerrainGenerator : TerrainGenerator
 
     public override float [,] GenerateMap(int width, int height)
     {
-		
+        
         this.width = width;
         this.height = height;
 
         float [,] map = new float[width, height];
 
         //faultLine = new TectonicFault(width, height);
-		Debug.Log("Newing Lithosphere");
-		lithosphere = new Lithosphere (width, height, seed);
+        Debug.Log("Newing Lithosphere");
+        lithosphere = new Lithosphere (width, height, seed);
 
         /** find boundaries ! **/
 
@@ -336,41 +336,56 @@ public class TectonicTerrainGenerator : TerrainGenerator
         return (float) ((fractalGenerator.GetValue((double) x, (double) y, 0.5) / 2.0) + 0.5);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
     private float get_weight(int x, int y)
     {
-		float range = 200.0f;
-		float smallest_dist = -1.0f;
-		int numFaults = lithosphere.getNumberOfFaults ();
-		for (int i = 0; i < numFaults; i++) {
-			TectonicFault faultLine = lithosphere.getFault (i);
+        float range = 200.0f;
+        float smallest_dist = -1.0f;
+        bool distance_found = false;
+        int numFaults = lithosphere.getNumberOfFaults ();
+        for (int i = 0; i < numFaults; i++) {
+            TectonicFault faultLine = lithosphere.getFault (i);
 
-			int length = faultLine.length ();
-			int counter = 0;
-			do {
-	            
-				if (faultLine.get (counter).get_distance ((float)x, (float)y) != -1.0f) {
-					smallest_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
-					break;
-				}
-				counter++;
-			} while (counter < length);
+            int length = faultLine.length ();
+            int counter = 0;
+            if (!distance_found)
+            {
+                smallest_dist = faultLine.get(counter).get_distance((float)x, (float)y);
+                distance_found = true;
+            }
 
-			if (smallest_dist == -1.0f)
-				return 0.0f;
+            /*
+            do {
+                
+                if (faultLine.get (counter).get_distance ((float)x, (float)y) != -1.0f) {
+                    smallest_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
+                    break;
+                }
+                counter++;
+            } while (counter < length);
 
-			float cur_dist;
-			counter++;
-	        
-			while (counter < length) {
-				cur_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
+            if (smallest_dist == -1.0f)
+                return 0.0f;
+                */
 
-				if (cur_dist < smallest_dist && cur_dist != -1) {
-					smallest_dist = cur_dist;
-				}
+            float cur_dist;
+            counter++;
+            
+            while (counter < length) {
+                cur_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
 
-				counter++;
-			}
-		}
+                if (cur_dist < smallest_dist && cur_dist != -1.0f) {
+                    smallest_dist = cur_dist;
+                }
+
+                counter++;
+            }
+        }
 
         if (smallest_dist > range)
             return 0.0f;
@@ -387,23 +402,27 @@ public class TectonicFault
 
     private System.Random rndGenerator;
 
-	public TectonicFault(int width, int height, int startX, int startY, int seed)
+    public TectonicFault(int width, int height, int startX, int startY, int seed)
     {
+        Debug.Log("Creating Fault: \nStartX = " + startX + " StartY = " + startY
+            + "\nSeed: " + seed);
         lines = new List<Line>();
         rndGenerator = new System.Random(seed);
-        int length = 500;
+        int length = 100;
 
-		int baseAngle = 0;
+        int baseAngle = 0;
 
-		if (startX == 0) {
-			baseAngle = 90;
-		} else if (startX == width) {
-			baseAngle = 270;
-		} else if (startY == 0) {
-			baseAngle = 0;
-		} else if (startY == height) {
-			baseAngle = 180;
-		}
+        if (startX == 0) {
+            baseAngle = 0;
+        } else if (startX == width) {
+            baseAngle = 270;
+        } else if (startY == 0) {
+            baseAngle = 90;
+        } else if (startY == height) {
+            baseAngle = 180;
+        }
+
+        Debug.Log("\nBase Angle: " + baseAngle);
         //int baseAngle = getAngle(45, 135);
         int minAngle = baseAngle - 45;
         int maxAngle = baseAngle + 45;
@@ -415,9 +434,9 @@ public class TectonicFault
         while (!end) {
             currentAngle = getAngle(minAngle, maxAngle);
 
-            endX = (int) (startX + length * System.Math.Sin(currentAngle * (System.Math.PI / 180)));
+            endX = (int)(startX + length * System.Math.Cos(currentAngle * (System.Math.PI / 180)));
 
-            endY = (int) (startY + length * System.Math.Cos(currentAngle * (System.Math.PI / 180)));
+            endY = (int)(startY + length * System.Math.Sin(currentAngle * (System.Math.PI / 180)));
 
             if (endX < 0) {
                 endX = 0;
@@ -437,24 +456,33 @@ public class TectonicFault
                 end = true;
             }
 
-            Debug.Assert(endX != startX);
-            Debug.Assert(endY != startY);
+            Debug.Assert(endX != startX || endY != startY);
+            //Debug.Assert(endY != startY);
 
-			if (endX == startX || endY == startY) {
-				Debug.Log ("X: " + startX + " Y: " + startY);
-				Debug.Log ("base angle: " + baseAngle + " Current angle: " + currentAngle);
-			}
+            if (endX == startX && endY == startY) {
+                Debug.Log("X: " + startX + " Y: " + startY);
+                Debug.Log("base angle: " + baseAngle + " Current angle: " + currentAngle);
+            }
 
             float gradient = 0.0f;
             if (endX != startX)
                 gradient = (endY - startY) / (endX - startX);
 
             if (gradient < 0.1f && gradient > -0.1f)
+            {
+                //Debug.Log("")
                 lines.Add(new HorizontalLine(startY, startX, endX));
+                endY = startY;
+            }
             else if (gradient > 0.9f && gradient < -0.9f)
+            {
                 lines.Add(new VerticalLine(startX, startY, endY));
+                endX = startX;
+            }
             else
+            {
                 lines.Add(new LinearLine(startX, startY, endX, endY));
+            }
 
             startX = endX;
             startY = endY;
@@ -473,71 +501,89 @@ public class TectonicFault
     public int length() {
         return lines.Count;
     }
+    
+    public void print()
+    {
+        //for ()
+    }
 
 }
 
 public class Lithosphere
 {
-	private List<TectonicFault> faults;
-	private int numberOfFaults;
+    private List<TectonicFault> faults;
+    private int numberOfFaults;
 
-	private System.Random rndGenerator;
-	public Lithosphere(int width, int height, int seed)
-	{
-		Debug.Log ("Generating Lithosphere");
-		rndGenerator = new System.Random (seed);
-		faults = new List<TectonicFault> ();
-		numberOfFaults = rndGenerator.Next (3) + 1;
+    private System.Random rndGenerator;
+    public Lithosphere(int width, int height, int seed)
+    {
+        Debug.Log ("Generating Lithosphere");
+        rndGenerator = new System.Random (seed);
+        faults = new List<TectonicFault> ();
+        numberOfFaults = rndGenerator.Next (3) + 1;
 
-		Debug.Log ("Generating " + numberOfFaults + " Faults.");
-		/*
-		int side = 0;
-		int startX = 0;
-		int startY = 0;
-		for (int i = 0; i < numberOfFaults; i++) {
-			side = rndGenerator.Next (3);
+        Debug.Log ("Generating " + numberOfFaults + " Faults.");
+        
+        int side = 0;
+        int startX = 0;
+        int startY = 0;
+        for (int i = 0; i < numberOfFaults; i++) {
+            side = rndGenerator.Next (3);
 
 
-			switch (side) {
-			case 0:
-				//left side
-				startX = 0;
-				startY = rndGenerator.Next (height);
-				break;
-			case 1:
-				//top side
-				startX = rndGenerator.Next (width);
-				startY = 0;
-				break;
-			case 2:
-				//right side
-				startX = width - 1;
-				startY = rndGenerator.Next (height);
-				break;
-			case 3:
-				//bottom side
-				startX = width;
-				startY = rndGenerator.Next (height);
-				break;
-			}
+            switch (side) {
+            case 0:
+                //left side
+                startX = 0;
+                startY = rndGenerator.Next (height / 3, height * 2 / 3);
+                break;
+            case 1:
+                //top side
+                startX = rndGenerator.Next (width / 3, width * 2 / 3);
+                startY = 0;
+                break;
+            case 2:
+                //right side
+                startX = width;
+                startY = rndGenerator.Next (height / 3, height * 2 / 3);
+                break;
+            case 3:
+                //bottom side
+                startX = rndGenerator.Next (width /3, width * 2 / 3);
+                startY = height;
+                break;
+            default:
+                startX = 0;
+                startY = height / 2;
+                break;
+            }
 
-			faults.Add(new TectonicFault(width, height, startX, startY, seed));
+            faults.Add(new TectonicFault(width, height, startX, startY, rndGenerator.Next()));
 
-		}
-		*/
-		faults.Add(new TectonicFault(width, height, 1000, 0, seed));
-		faults.Add(new TectonicFault(width, height, 0, 1000, seed));
-	}
+        }
+        
+        //faults.Add(new TectonicFault(width, height, 1000, 0, seed));
+        //faults.Add(new TectonicFault(width, height, 0, 1000, seed));
+        //numberOfFaults = 2;
+    }
 
-	public int getNumberOfFaults() {
-		return numberOfFaults;
-	}
+    public int getNumberOfFaults() {
+        return numberOfFaults;
+    }
 
-	public TectonicFault getFault(int i) {
-		if (i >= 0 && i < numberOfFaults) {
-			return faults [i];
-		} else {
-			throw new Exception ();
-		}
-	}
+    public TectonicFault getFault(int i) {
+        if (i >= 0 && i < numberOfFaults) {
+            return faults [i];
+        } else {
+            throw new Exception ();
+        }
+    }
+
+    public void printLines()
+    {
+        for (int i = 0; i < numberOfFaults; i++)
+        {
+            faults[i].print();
+        }
+    }
 }
