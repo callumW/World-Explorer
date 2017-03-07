@@ -44,6 +44,7 @@ public class PerlinTerrainGenerator : TerrainGenerator
 public abstract class Line
 {
     public abstract float get_distance(float x, float y);
+    public abstract void print();
 }
 
 public class VerticalLine : Line
@@ -65,6 +66,11 @@ public class VerticalLine : Line
         else
             return -1.0f;
     }
+
+    public override void print()
+    {
+        Debug.Log("Veritcal Line:\nX: " + x_value + "\nY: " + minY + "-" + maxY);
+    }
 }
 
 public class HorizontalLine : Line
@@ -85,6 +91,11 @@ public class HorizontalLine : Line
             return Math.Abs(y - y_value);
         else
             return -1.0f;
+    }
+
+    public override void print()
+    {
+        Debug.Log("Horizontal Line:\nY: " + y_value + "\nX: " + minX + "-" + maxX);
     }
 }
 
@@ -153,6 +164,13 @@ public class LinearLine : Line
 
         return -1.0f;
 
+    }
+
+    public override void print()
+    {
+        Debug.Log("Linear Line\ny = " + intersect + " + x * " + gradient + 
+            "\nperpendicular: " + perpendicular + "\nbound intersect: " +
+            minRangeIntersect + "-" + maxRangeIntersect);
     }
 
 }
@@ -317,8 +335,286 @@ public class TectonicTerrainGenerator : TerrainGenerator
                 map[x, y] = h * scale;
             }
         }
-
+        applyFalloffmap(map, width, height);
         return map;
+    }
+
+    private void applyFalloffmap(float [,] map, int width, int height)
+    {
+
+        //baseGroundGenerator.Frequency = 0.01;
+
+        int numFalloffVals = 2 * width + 2 * height;
+
+        int[] falloffValuesTop = new int[width];
+        int[] falloffValuesRight = new int[height];
+        int[] falloffValuesBottom = new int[width];
+        int[] falloffValuesLeft = new int[height];
+
+        int falloffRange = 1000;
+
+        for (int i = 0; i < width; i++)
+        {
+            falloffValuesTop[i] = (int) (falloffRange * get_base_perlin_value(i, 0));
+            falloffValuesBottom[i] = (int)(falloffRange * get_base_perlin_value(0, i));
+        }
+
+        for (int i = 0; i < height; i++)
+        {
+            falloffValuesLeft[i] = (int)(falloffRange * get_base_perlin_value(i, height));
+            falloffValuesRight[i] = (int)(falloffRange * get_base_perlin_value(height, i));
+        }
+
+        float h = 0.0f;
+        int distToFalloff;
+
+        //Top middle
+        for (int y = 0; y < falloffRange; y++)
+        {
+            for (int x = falloffRange; x < width - falloffRange; x++)
+            {
+                h = map[x, y];
+                if (y < falloffValuesTop[x])
+                {
+                    distToFalloff = falloffValuesTop[x] - y;
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+                
+                
+            }
+        }
+
+        //Top Right
+        for (int y = 0; y < falloffRange; y++)
+        {
+            for (int x = width - falloffRange; x < width; x++)
+            {
+                h = map[x, y];
+                if (y < falloffValuesTop[x])
+                {
+                    if (x > width - falloffValuesRight[y])
+                    {
+                        int distToRightFalloff = falloffValuesRight[y] - (width - x);
+                        distToFalloff = falloffValuesTop[x] - y;
+
+                        if (distToRightFalloff < distToFalloff)
+                        {
+                            h *= 1 - distToRightFalloff / falloffRange;
+                        }
+                        else
+                        {
+                            h *= 1 - distToFalloff / falloffRange;
+                        }
+
+                        map[x, y] = h;
+                    }
+                    else
+                    {
+                        distToFalloff = falloffValuesTop[x] - y;
+                        h *= 1 - distToFalloff / falloffRange;
+                        map[x, y] = h;
+                    }
+                        
+                }
+                else if (x > width - falloffValuesRight[y])
+                {
+                    distToFalloff = falloffValuesRight[y] - (width - x);
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+
+
+            }
+        }
+
+        //bottom right
+        for (int y = height - falloffRange; y < height; y++)
+        {
+            for (int x = width - falloffRange; x < width; x++)
+            {
+                h = map[x, y];
+                if (y > height - falloffValuesBottom[x])
+                {
+                    if (x > width - falloffValuesRight[y])
+                    {
+                        int distToRightFalloff = falloffValuesRight[y] - (width - x);
+                        distToFalloff = falloffValuesBottom[x] - (height - y);
+
+                        if (distToRightFalloff < distToFalloff)
+                        {
+                            h *= 1 - distToRightFalloff / falloffRange;
+                        }
+                        else
+                        {
+                            h *= 1 - distToFalloff / falloffRange;
+                        }
+
+                        map[x, y] = h;
+                    }
+                    else
+                    {
+                        distToFalloff = y - (height - falloffValuesBottom[x]);
+                        h *= 1 - distToFalloff / falloffRange; ;
+                        map[x, y] = h;
+                    }
+
+                }
+                else if (x > width - falloffValuesRight[y])
+                {
+                    distToFalloff = x - (width - falloffValuesRight[y]);
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+
+
+            }
+        }
+
+        //Right middle
+        for (int y = falloffRange; y < height - falloffRange; y++)
+        {
+            for (int x = width - falloffRange; x < width; x++)
+            {
+                h = map[x, y];
+                if (x > width - falloffValuesRight[y])
+                {
+                    distToFalloff = x - (width - falloffValuesRight[y]);
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+
+
+            }
+        }
+
+
+        //bottom middle
+        for (int y = height - falloffRange; y < falloffRange; y++)
+        {
+            for (int x = falloffRange; x < width - falloffRange; x++)
+            {
+                h = map[x, y];
+                if (y > height - falloffValuesBottom[x])
+                {
+                    distToFalloff = y - (height - falloffValuesBottom[x]);
+                    h *=  1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+
+
+            }
+        }
+
+        //bottom left
+        for (int y = height - falloffRange; y < height; y++)
+        {
+            for (int x = 0; x < falloffRange; x++)
+            {
+                h = map[x, y];
+                if (y > height - falloffValuesBottom[x])
+                {
+                    if (x < falloffValuesLeft[y])
+                    {
+                        int distToRightFalloff = falloffValuesLeft[y] - x;
+                        distToFalloff = falloffValuesBottom[x] - (y - height);
+
+                        if (distToRightFalloff < distToFalloff)
+                        {
+                            h *= 1 - distToRightFalloff / falloffRange;
+                        }
+                        else
+                        {
+                            h *= 1 - distToFalloff / falloffRange;
+                        }
+
+                        map[x, y] = h;
+                    }
+                    else
+                    {
+                        distToFalloff = falloffValuesBottom[x]  - (y - height);
+                        h *= 1 - distToFalloff / falloffRange;
+                        map[x, y] = h;
+                    }
+
+                }
+                else if (x < falloffValuesLeft[y])
+                {
+                    distToFalloff = falloffValuesLeft[y] - x;
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+
+
+            }
+        }
+
+        //left middle
+        for (int y = falloffRange; y < height - falloffRange; y++)
+        {
+            for (int x = 0; x < falloffRange; x++)
+            {
+                h = map[x, y];
+                if (x < falloffValuesLeft[y])
+                {
+                    distToFalloff = falloffValuesLeft[y] - x;
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+
+
+            }
+        }
+
+        //top left
+        for (int y = 0; y < falloffRange; y++)
+        {
+            for (int x = 0; x < falloffRange; x++)
+            {
+                h = map[x, y];
+                if (y < falloffValuesTop[x])
+                {
+                    if (x < falloffValuesLeft[y])
+                    {
+                        int distToRightFalloff = falloffValuesLeft[y] - x;
+                        distToFalloff = falloffValuesTop[x] - y;
+
+                        if (distToRightFalloff < distToFalloff)
+                        {
+                            h *= 1 - distToRightFalloff / falloffRange;
+                        }
+                        else
+                        {
+                            h *=  1 - distToFalloff / falloffRange;
+                        }
+
+                        map[x, y] = h;
+                    }
+                    else
+                    {
+                        distToFalloff = falloffValuesTop[x] - y;
+                        h *= 1 - distToFalloff / falloffRange;
+                        map[x, y] = h;
+                    }
+
+                }
+                else if (x < falloffValuesLeft[y])
+                {
+                    distToFalloff = falloffValuesLeft[y] - x;
+                    h *= 1 - distToFalloff / falloffRange;
+                    map[x, y] = h;
+                }
+            }
+        }
+
+
+
+
+    }
+
+    private void getFalloffmap()
+    {
+        //int array[2 * width + 2 * height];
     }
 
     private float get_perlin_value(int x, int y)
@@ -336,12 +632,6 @@ public class TectonicTerrainGenerator : TerrainGenerator
         return (float) ((fractalGenerator.GetValue((double) x, (double) y, 0.5) / 2.0) + 0.5);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
     private float get_weight(int x, int y)
     {
         float range = 200.0f;
@@ -355,7 +645,12 @@ public class TectonicTerrainGenerator : TerrainGenerator
             int counter = 0;
             if (!distance_found)
             {
-                smallest_dist = faultLine.get(counter).get_distance((float)x, (float)y);
+                do
+                {
+                    smallest_dist = faultLine.get(counter).get_distance((float)x, (float)y);
+                    counter++;
+                }
+                while (smallest_dist == -1.0f);
                 distance_found = true;
             }
 
@@ -366,7 +661,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
                     smallest_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
                     break;
                 }
-                counter++;
+                counter++; 
             } while (counter < length);
 
             if (smallest_dist == -1.0f)
@@ -374,7 +669,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
                 */
 
             float cur_dist;
-            counter++;
+           // counter++;
             
             while (counter < length) {
                 cur_dist = faultLine.get (counter).get_distance ((float)x, (float)y);
@@ -434,9 +729,33 @@ public class TectonicFault
         while (!end) {
             currentAngle = getAngle(minAngle, maxAngle);
 
-            endX = (int)(startX + length * System.Math.Cos(currentAngle * (System.Math.PI / 180)));
+            if (currentAngle == 270)
+            {
+                endX = startX - length;
+                endY = startY;
+            }
+            else if (currentAngle == 0)
+            {
+                endX = startX + length;
+                endY = startY;
+            }
+            else if (currentAngle == 90)
+            {
+                endY = startY + length;
+                endX = startX;
+            }
+            else if (currentAngle == 180)
+            {
+                endY = startY - length;
+                endX = startX;
+            }
+            else
+            {
+                endX = (int)(startX + length * System.Math.Cos(currentAngle * (System.Math.PI / 180)));
 
-            endY = (int)(startY + length * System.Math.Sin(currentAngle * (System.Math.PI / 180)));
+                endY = (int)(startY + length * System.Math.Sin(currentAngle * (System.Math.PI / 180)));
+            }
+           
 
             if (endX < 0) {
                 endX = 0;
@@ -468,15 +787,19 @@ public class TectonicFault
             if (endX != startX)
                 gradient = (endY - startY) / (endX - startX);
 
-            if (gradient < 0.1f && gradient > -0.1f)
+            if (gradient < 0.01f && gradient > -0.01f)
             {
                 //Debug.Log("")
-                lines.Add(new HorizontalLine(startY, startX, endX));
+                if (startX != endX)
+                    lines.Add(new HorizontalLine(startY, startX, endX));
+
                 endY = startY;
             }
-            else if (gradient > 0.9f && gradient < -0.9f)
+            else if (gradient > 0.09f && gradient < -0.09f)
             {
-                lines.Add(new VerticalLine(startX, startY, endY));
+                if (startY != endY)
+                    lines.Add(new VerticalLine(startX, startY, endY));
+
                 endX = startX;
             }
             else
@@ -487,6 +810,8 @@ public class TectonicFault
             startX = endX;
             startY = endY;
         }
+
+        
     }
 
     private int getAngle(int min, int max)
@@ -495,7 +820,10 @@ public class TectonicFault
     }
 
     public Line get(int i) {
-        return lines[i];
+        if (i >= 0 && i < length())
+            return lines[i];
+        else
+            throw new Exception();
     }
 
     public int length() {
@@ -504,7 +832,11 @@ public class TectonicFault
     
     public void print()
     {
-        //for ()
+        int listLength = length();
+        for (int i = 0; i < listLength; i++)
+        {
+            lines[i].print();
+        }
     }
 
 }
@@ -561,10 +893,13 @@ public class Lithosphere
             faults.Add(new TectonicFault(width, height, startX, startY, rndGenerator.Next()));
 
         }
-        
+
         //faults.Add(new TectonicFault(width, height, 1000, 0, seed));
         //faults.Add(new TectonicFault(width, height, 0, 1000, seed));
         //numberOfFaults = 2;
+
+        Debug.Log("Printing Faults: ");
+        printFaults();
     }
 
     public int getNumberOfFaults() {
@@ -579,10 +914,11 @@ public class Lithosphere
         }
     }
 
-    public void printLines()
+    public void printFaults()
     {
         for (int i = 0; i < numberOfFaults; i++)
         {
+            Debug.Log("Printing Fault #\n" + i);
             faults[i].print();
         }
     }
