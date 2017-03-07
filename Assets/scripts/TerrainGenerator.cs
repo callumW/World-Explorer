@@ -173,6 +173,11 @@ public class LinearLine : Line
             minRangeIntersect + "-" + maxRangeIntersect);
     }
 
+	public int getYDist(int x)
+	{
+		return (int) (intersect + gradient * x);
+	}
+
 }
 
 public class Boundary
@@ -335,11 +340,45 @@ public class TectonicTerrainGenerator : TerrainGenerator
                 map[x, y] = h * scale;
             }
         }
-        applyFalloffmap(map, width, height);
+        //applyFalloffmap(ref map, width, height);
+		//applySubductionZone(ref map, width, height);
         return map;
     }
 
-    private void applyFalloffmap(float [,] map, int width, int height)
+	private void applySubductionZone(ref float [,] map, int width, int height)
+	{
+		//First, workout out the subduction line (Just use the line or make a new line from start to end?).
+		//Next, workout out which side will be subduction zone
+		//Subduct!
+
+		int startX, startY, endX, endY;
+		TectonicFault fault = lithosphere.getFault (0);
+		startX = fault.getStartX ();
+		startY = fault.getStartY ();
+
+		endX = fault.getEndX ();
+		endY = fault.getEndY ();
+
+		LinearLine subductionLine = new LinearLine (startX, startY, endX, endY);
+
+		int distToLineY = 0;
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				distToLineY = y - subductionLine.getYDist (x);
+
+				if (distToLineY > 0) {
+					//subduct !!!
+
+					map [x, y] = 0.0f;
+				}
+
+				//loop through lines in fault
+
+			}
+		}
+	}
+
+    private void applyFalloffmap(ref float [,] map, int width, int height)
     {
 
         //baseGroundGenerator.Frequency = 0.01;
@@ -695,6 +734,31 @@ public class TectonicFault
     //Type of boundary?
     //range?
 
+	private int globalStartX;
+	private int globalStartY;
+	private int globalEndX;
+	private int globalEndY;
+
+	public int getStartX() 
+	{
+		return globalStartX;
+	}
+
+	public int getStartY() 
+	{
+		return globalStartY;
+	}
+
+	public int getEndX() 
+	{
+		return globalEndX;
+	}
+
+	public int getEndY()
+	{
+		return globalEndY;
+	}
+
     private System.Random rndGenerator;
 
     public TectonicFault(int width, int height, int startX, int startY, int seed)
@@ -706,6 +770,9 @@ public class TectonicFault
         int length = 100;
 
         int baseAngle = 0;
+
+		globalStartX = startX;
+		globalStartY = startY;
 
         if (startX == 0) {
             baseAngle = 0;
@@ -723,7 +790,8 @@ public class TectonicFault
         int maxAngle = baseAngle + 45;
         int currentAngle;
 
-        int endX, endY;
+		int endX = 0; 
+		int endY = 0;
 
         bool end = false;
         while (!end) {
@@ -779,26 +847,36 @@ public class TectonicFault
             //Debug.Assert(endY != startY);
 
             if (endX == startX && endY == startY) {
+				Debug.Log ("Found end of boundary");
+				if (end)
+					Debug.Log ("End is true");
                 Debug.Log("X: " + startX + " Y: " + startY);
                 Debug.Log("base angle: " + baseAngle + " Current angle: " + currentAngle);
             }
 
             float gradient = 0.0f;
-            if (endX != startX)
-                gradient = (endY - startY) / (endX - startX);
+			if (endX != startX)
+				gradient = (endY - startY) / (endX - startX);
+			else {
+			}
 
-            if (gradient < 0.01f && gradient > -0.01f)
+            if (gradient < 0.00001f && gradient > -0.0000001f)
             {
                 //Debug.Log("")
-                if (startX != endX)
-                    lines.Add(new HorizontalLine(startY, startX, endX));
+				if (startX != endX)
+					lines.Add (new HorizontalLine (startY, startX, endX));
+				else
+					throw new Exception ("gradient is small and endX is not startX");
+				
 
                 endY = startY;
             }
-            else if (gradient > 0.09f && gradient < -0.09f)
+			else if (gradient > 10000.0f && gradient < -10000.0f)
             {
-                if (startY != endY)
-                    lines.Add(new VerticalLine(startX, startY, endY));
+				if (startY != endY)
+					lines.Add (new VerticalLine (startX, startY, endY));
+				else
+					throw new Exception ("Gradient is large and endY is not StartY");
 
                 endX = startX;
             }
@@ -811,12 +889,21 @@ public class TectonicFault
             startY = endY;
         }
 
+		globalEndX = endX;
+		globalEndY = endY;
+
         
     }
 
     private int getAngle(int min, int max)
     {
-        return rndGenerator.Next(min, max);
+		int angle;
+
+		do {
+			angle = rndGenerator.Next (min, max);
+		} while (angle == min + 45);
+
+		return angle;
     }
 
     public Line get(int i) {
@@ -852,7 +939,8 @@ public class Lithosphere
         Debug.Log ("Generating Lithosphere");
         rndGenerator = new System.Random (seed);
         faults = new List<TectonicFault> ();
-        numberOfFaults = rndGenerator.Next (3) + 1;
+        //numberOfFaults = rndGenerator.Next (3) + 1;
+		numberOfFaults = 1;
 
         Debug.Log ("Generating " + numberOfFaults + " Faults.");
         
