@@ -1015,3 +1015,25 @@ public class Lithosphere
         }
     }
 }
+
+public class TreeManager
+{
+	private GameObject tree;
+	private Vector2 position;
+	private Bounds bounds;
+
+	private MapData mapData;
+
+	private MeshRenderer meshRenderer;
+	private MeshFilter meshFilter;
+
+	private TreeInstance myTree;
+
+
+	public TreeManager(ref float[,] map, int width, int height, int seed) 
+	{
+		//Randomly place trees within a height range?
+		tree = new GameObject("A tree");
+
+	}
+}

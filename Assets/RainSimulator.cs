@@ -11,7 +11,7 @@ public class RainSimulator
 	public RainSimulator (ref float [,] map, int width, int height, int seed)
 	{
 		this.map = map;
-		manager = new RaindropManager (250, ref map, width, height, seed, addVisit);
+		manager = new RaindropManager (1, ref map, width, height, seed, addVisit);
 		visitedPoints = new List<Point> ();
 
 		Debug.Log ("Initialised RainSimulator");

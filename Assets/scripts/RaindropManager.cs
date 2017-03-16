@@ -52,6 +52,10 @@ public class RaindropManager
 			while (agents [i].isAlive ()) {
 				p = agents [i].update ();
 				Debug.Log ("Updating visited points");
+
+				if (agents [i].stationary) {
+
+				}
 				callback (p);
 			}
 		}

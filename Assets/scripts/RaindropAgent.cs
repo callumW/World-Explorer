@@ -29,10 +29,13 @@ public class RaindropAgent
 	private Point currentPoint;
 
 	private int lifespan;
+	private int stationaryCount;
 	private bool alive;
+	public bool stationary;
+
 
 	//filling value?s
-	private float fillValue = 0.0f;
+	private float fillValue;
 
 	public RaindropAgent (ref float [,] map, int width, int height, int startX, int startY, int lifespan)
 	{
@@ -52,6 +55,9 @@ public class RaindropAgent
 			lifespan = 0;
 			alive = false;
 		}
+
+		fillValue = 0.0f;
+		stationary = true;
 	}
 
 	public Point update()
@@ -60,10 +66,11 @@ public class RaindropAgent
 			//Check for lowest neighbour
 			//move to it
 			Point lowestPoint;
-			lowestPoint.x = 0;
-			lowestPoint.y = 0;
+			lowestPoint.x = currentPoint.x;
+			lowestPoint.y = currentPoint.y;
+			stationary = true;
 
-			float currentHeight = 100000.0f;
+			float currentHeight = map[currentPoint.x, currentPoint.y];
 
 			if (currentPoint.x > 0) {
 				if (currentPoint.y > 0) {
@@ -73,6 +80,7 @@ public class RaindropAgent
 						lowestPoint.y = currentPoint.y - 1;
 						currentHeight = map [lowestPoint.x, lowestPoint.y];
 						fillValue = 0.0f;
+						stationary = false;
 					}
 				}
 
@@ -84,6 +92,7 @@ public class RaindropAgent
 
 						currentHeight = map [lowestPoint.x, lowestPoint.y];
 						fillValue = 0.0f;
+						stationary = false;
 					}
 					//middle left
 					if (map [currentPoint.x - 1, currentPoint.y] < currentHeight + fillValue) {
@@ -92,6 +101,7 @@ public class RaindropAgent
 
 						currentHeight = map [lowestPoint.x, lowestPoint.y];
 						fillValue = 0.0f;
+						stationary = false;
 					}
 				}
 			}
@@ -104,6 +114,7 @@ public class RaindropAgent
 
 					currentHeight = map [lowestPoint.x, lowestPoint.y];
 					fillValue = 0.0f;
+					stationary = false;
 				}
 
 				if (currentPoint.y > 0) {
@@ -114,6 +125,7 @@ public class RaindropAgent
 
 						currentHeight = map [lowestPoint.x, lowestPoint.y];
 						fillValue = 0.0f;
+						stationary = false;
 					}
 				}
 
@@ -125,6 +137,7 @@ public class RaindropAgent
 
 						currentHeight = map [lowestPoint.x, lowestPoint.y];
 						fillValue = 0.0f;
+						stationary = false;
 					}
 				}
 			}
@@ -137,6 +150,7 @@ public class RaindropAgent
 
 					currentHeight = map [lowestPoint.x, lowestPoint.y];
 					fillValue = 0.0f;
+					stationary = false;
 				}
 			}
 
@@ -148,14 +162,18 @@ public class RaindropAgent
 
 					currentHeight = map [lowestPoint.x, lowestPoint.y];
 					fillValue = 0.0f;
+					stationary = false;
 				}
 			}
 
-			currentPoint.x = lowestPoint.x;
-			currentPoint.y = lowestPoint.y;
-
-			if ((currentPoint.x == width || currentPoint.x == 0) && (currentPoint.y == height || currentPoint.y == 0)) {
-				alive = false;
+			if (stationary) {
+				//fillValue += 0.1f;
+			} else {
+				currentPoint.x = lowestPoint.x;
+				currentPoint.y = lowestPoint.y;
+				if ((currentPoint.x == width || currentPoint.x == 0) && (currentPoint.y == height || currentPoint.y == 0)) {
+					alive = false;
+				}
 			}
 
 			--lifespan;
