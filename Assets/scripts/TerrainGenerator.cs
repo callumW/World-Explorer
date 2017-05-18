@@ -344,7 +344,7 @@ public class TectonicTerrainGenerator : TerrainGenerator
 		//applySubductionZone(ref map, width, height);
 
 		Debug.Log ("Simulating rain");
-		RainSimulator sim = new RainSimulator (ref map, width, height, seed);
+		//RainSimulator sim = new RainSimulator (ref map, width, height, seed);
 		Debug.Log ("Finished Simulation");
         return map;
     }
