@@ -15,7 +15,19 @@ Games'.
 
 This dissertation can be found here: [dissertation.pdf](dissertation.pdf).
 
-### Installation
+### Running
+
+Find the latest release in the releases tab.
+
+When you load the game it will take a moment to generate the map.
+
+#### Controls
+* WASD to fly around
+* QE to move up/down
+* Hold SHIFT to move faster
+* Alt-F4/CMD-Q to quit on Windows/macOS
+
+Each time you load the game the map will be different.
 
 
 ### License
