@@ -38,3 +38,5 @@ This project uses the versioning system defined by
 [Semantic Versioning v2.0.0](http://semver.org/spec/v2.0.0.html).
 
 ### Screenshots
+
+See page 32 onwards: [dissertation.pdf](dissertation.pdf).
